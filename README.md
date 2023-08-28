@@ -26,7 +26,8 @@ python train_diffu.py  --config CONFIG
 python plot.py --data_folder DIRECTORY_OF_INPUTS -g GENERATED_SHOWERS.h5 --nevts N  --sample  --config CONFIG --sample_steps N_DIFFUSION_STEPS --sample_offset N_OFFSET
 ```
 There are additional options in `plot.py`. 
-400 diffusion steps were used for the baseline results in the paper. A sampling offset of 2 was used for datasets 1 and 2 (necessary to prevent instabilities). 
+400 diffusion steps were used for the baseline results in the paper. 
+A sampling offset of 2 was used for datasets 1 and 2 (necessary to prevent instabilities). 
 
 An example commands to generate showers for dataset 1 photons would be as follows:
 
