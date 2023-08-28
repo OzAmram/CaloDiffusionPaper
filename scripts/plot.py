@@ -10,7 +10,6 @@ import time, sys, copy
 import utils
 import torch
 import torch.utils.data as torchdata
-from CaloAE import *
 from CaloDiffu import *
 import h5py
 
@@ -206,22 +205,7 @@ if flags.sample:
 
         generated = model.gen_cold_image(torch_E_tensor, cold_noise_scale).numpy()
 
-    #elif(flags.model == "LatentDiffu"):
-    #    print("Loading AE from " + dataset_config['AE'])
-    #    AE = CaloAE(dataset_config['SHAPE_PAD'][1:], batch_size, config=dataset_config)
-    #    AE.model.load_weights(dataset_config['AE']).expect_partial()
-
-
-    #    print("Loading Diffu model from " + flags.model_loc)
-    #    model = CaloDiffu(AE.encoded_shape,energies.shape[1],nevts, config=dataset_config)
-    #    model.load_weights(flags.model_loc).expect_partial()
-
-    #    generated_latent=model.Sample(cond=energies, num_steps=dataset_config['NSTEPS']).numpy()
-
-    #    generated = AE.decoder_model.predict(generated_latent, batch_size = batch_size)
-
-
-    print("GENERATED", np.mean(generated), np.std(generated), np.amax(generated), np.amin(generated))
+    #print("GENERATED", np.mean(generated), np.std(generated), np.amax(generated), np.amin(generated))
 
     if(not orig_shape): generated = generated.reshape(dataset_config["SHAPE"])
 
@@ -266,7 +250,7 @@ if flags.sample:
         dset = h5f.create_dataset("incident_energies", data=1000*energies, compression = 'gzip')
 
 
-if(not flags.sample or flags.job_idx < 0):
+if(not flags.sample):
 
 
     geom_conv = None

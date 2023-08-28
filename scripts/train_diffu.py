@@ -6,8 +6,7 @@ import h5py as h5
 import torch.optim as optim
 import torch.utils.data as torchdata
 
-from utils import *
-from CaloAE import *
+import utils
 from CaloDiffu import *
 from models import *
 

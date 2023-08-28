@@ -31,7 +31,7 @@
     'ECUT':0.0000001,
     'logE':True,
     'MAXDEP':3.1,
-    'CYLINDRICAL': False,
+    'CYLINDRICAL': True,
     'SHOWERMAP': 'logit-norm',
     'R_Z_INPUT': True,
     'PHI_INPUT': True,
@@ -45,7 +45,7 @@
     'TIME_EMBED' : 'sigma',
     'COND_EMBED' : 'id',
     'SHOWER_EMBED' : 'orig-NN',
-    'CHECKPOINT_NAME':'dataset1_phot_july27_nocyl',
+    'CHECKPOINT_NAME':'dataset1_phot',
 
 
 }
