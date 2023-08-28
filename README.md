@@ -31,7 +31,7 @@ There are additional options in `plot.py`.
 An example commands to generate showers for dataset 1 photons would be as follows:
 
 ```bash
-python plot.py --config ../configs/config_dataset1_photon.json --model_loc ../trained_models/dataset1_photon.pth --sample --sample_offset 2 --nevts 1000 -g test_ds1.h5
+python plot.py --config ../configs/config_dataset1_photon.json --model_loc ../trained_models/dataset1_photon.pth --sample --sample_steps 400 --sample_offset 2 --nevts 1000 -g test_ds1.h5
 ```
 
 # Creating the plots shown in the paper
