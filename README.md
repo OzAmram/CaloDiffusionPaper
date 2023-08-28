@@ -23,16 +23,30 @@ python train_diffu.py  --config CONFIG
 # Sampling with the learned model
 
 ```bash
-python plot.py  --nevts N  --sample  --config CONFIG --sample_steps
-N_DIFFUSION_STEPS 
+python plot.py --data_folder DIRECTORY_OF_INPUTS -g GENERATED_SHOWERS.h5 --nevts N  --sample  --config CONFIG --sample_steps N_DIFFUSION_STEPS --sample_offset N_OFFSET
 ```
+There are additional options in `plot.py`. 
+400 diffusion steps were used for the baseline results in the paper. 
+A sampling offset of 2 was used for datasets 1 and 2 (necessary to prevent instabilities). 
+
+An example commands to generate showers for dataset 1 photons would be as follows:
+
+```bash
+python plot.py --config ../configs/config_dataset1_photon.json --model_loc ../trained_models/dataset1_photon.pth --sample --sample_steps 400 --sample_offset 2 --nevts 1000 -g test_ds1.h5
+```
+
 # Creating the plots shown in the paper
 
 ```bash
-python plot.py  --config CONFIG
+python plot.py --data_folder DIRECTORY_OF_INPUTS -g GENERATED_SHOWERS.h5 --config CONFIG --plot_folder PLOTTING_DIRECTORY
+```
+An example to plot the showers generated for dataset 1 would be as follows:
+
+```bash
+python plot.py --config ../configs/config_dataset1_photon.json --plot_folder test_phot/ -g test_ds1.h5
 ```
 
-Some of the quantitative metrics are computed based on the [CaloChallenge evaluation code](https://github.com/OzAmram/CaloChallenge) 
+Some of the quantitative metrics and plotting for dataset 1 are done based on the [CaloChallenge evaluation code](https://github.com/OzAmram/CaloChallenge) 
 
 
 
