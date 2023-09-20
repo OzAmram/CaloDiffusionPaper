@@ -1,4 +1,4 @@
-# CaloDiffusion official repository
+d# CaloDiffusion official repository
 
 Repo for diffusion based calorimeter generation.
 
@@ -15,12 +15,14 @@ Results are presented using the [Fast Calorimeter Data Challenge dataset](https:
 
 ```bash
 cd scripts
-python train_diffu.py  --config CONFIG
+python train_diffu.py  --data_folder DIRECTORY_OF_INPUTS --config CONFIG
 ```
 * Example configs used to produce the results in the paper are in `configs` folder
 * Trained models used to produce the results in the paper are in the `trained_models` folder
 
 # Sampling with the learned model
+
+The `plot.py` both samples from the models (if the `--sample` flag is included) and creates the summary plots. 
 
 ```bash
 python plot.py --data_folder DIRECTORY_OF_INPUTS -g GENERATED_SHOWERS.h5 --nevts N  --sample  --config CONFIG --sample_steps N_DIFFUSION_STEPS --sample_offset N_OFFSET
@@ -46,7 +48,12 @@ An example to plot the showers generated for dataset 1 would be as follows:
 python plot.py --config ../configs/config_dataset1_photon.json --plot_folder test_phot/ -g test_ds1.h5
 ```
 
-Some of the quantitative metrics and plotting for dataset 1 are done based on the [CaloChallenge evaluation code](https://github.com/OzAmram/CaloChallenge) 
+Some of the quantitative metrics and plotting for dataset 1 are done based on the [CaloChallenge evaluation code](https://github.com/OzAmram/CaloChallenge)
+The evaluation for the CaloChallenge code proceeds can be performed as:
 
+```
+python evaluate.py -i GENERATED_DATASET.h5 -r REFERENCE_DATASET.h5 -d 3 --output_dir DIRECTORY_FOR_OUTPUTS/ -m all --ratio
+```
+The `-m all` flag runs all the evaluations of the CaloChallenge (plots, chi2 metric, classifier metric, KPD/FPD metric). 
 
 
