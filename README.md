@@ -52,8 +52,9 @@ Some of the quantitative metrics and plotting for dataset 1 are done based on th
 The evaluation for the CaloChallenge code proceeds can be performed as:
 
 ```
-python evaluate.py -i GENERATED_DATASET.h5 -r REFERENCE_DATASET.h5 -d 3 --output_dir DIRECTORY_FOR_OUTPUTS/ -m all --ratio
+python evaluate.py -i GENERATED_DATASET.h5 -r REFERENCE_DATASET.h5 -d DATASET_NUMBER --output_dir DIRECTORY_FOR_OUTPUTS/ -m all --ratio
 ```
 The `-m all` flag runs all the evaluations of the CaloChallenge (plots, chi2 metric, classifier metric, KPD/FPD metric). 
+See `evaluate.py` for more options
 
 
