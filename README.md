@@ -4,6 +4,8 @@ Repo for diffusion based calorimeter generation.
 
 Pytorch v1.9  was used to implement all models. 
 
+Carina's Version 
+
 # Data
 
 Results are presented using the [Fast Calorimeter Data Challenge dataset](https://calochallenge.github.io/homepage/) and are available for download on zenodo:
