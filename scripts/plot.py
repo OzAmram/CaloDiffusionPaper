@@ -11,7 +11,7 @@ import utils
 import torch
 import torch.utils.data as torchdata
 from CaloDiffu import *
-import h5py
+# import h5py
 
 if(torch.cuda.is_available()): device = torch.device('cuda')
 else: device = torch.device('cpu')
@@ -40,7 +40,8 @@ parser.add_argument('--sample_steps', default = -1, type = int, help='How many s
 parser.add_argument('--sample_offset', default = 0, type = int, help='Skip some iterations in the sampling (noisiest iters most unstable)')
 parser.add_argument('--sample_algo', default = 'ddpm', help = 'What sampling algorithm (ddpm, ddim)')
 parser.add_argument('--job_idx', default = -1, type = int, help = 'Split generation among different jobs')
-parser.add_argument('--debug', action='store_true', default=False,help='Debugging options')
+parser.add_argument('--debug', action='store_true', default=False, help='Debugging options')
+parser.add_argument('--binning_file', type=str, default=None, help='Path to binning file') # added to account for new file structure
 
 flags = parser.parse_args()
 
@@ -81,7 +82,7 @@ if flags.sample:
     energies = None
     data = None
     for i, dataset in enumerate(dataset_config['EVAL']):
-        n_dataset = h5py.File(os.path.join(flags.data_folder,dataset))['showers'].shape[0]
+        n_dataset = h5.File(os.path.join(flags.data_folder,dataset))['showers'].shape[0]
         if(evt_start >= n_dataset):
             evt_start -= n_dataset
             continue
@@ -130,14 +131,16 @@ if flags.sample:
     NN_embed = None
     if('NN' in shower_embed):
         if(dataset_num == 1):
-            binning_file = "../CaloChallenge/code/binning_dataset_1_photons.xml"
-            bins = XMLHandler("photon", binning_file)
+            if flags.binning_file is None:
+                flags.binning_file = "../CaloChallenge/code/binning_dataset_1_photons.xml"
+            bins = XMLHandler("photon", flags.binning_file)
         else: 
-            binning_file = "../CaloChallenge/code/binning_dataset_1_pions.xml"
-            bins = XMLHandler("pion", binning_file)
+            if flags.binning_file is None:
+                flags.binning_file = "../CaloChallenge/code/binning_dataset_1_pions.xml"
+            bins = XMLHandler("pion", flags.binning_file)
 
         NN_embed = NNConverter(bins = bins).to(device = device)
-        
+
 
 
     if(flags.model == "AE"):
@@ -255,7 +258,7 @@ if(not flags.sample):
 
     geom_conv = None
     if(dataset_num <= 1):
-        bins = XMLHandler(dataset_config['PART_TYPE'], dataset_config['BIN_FILE'])
+        bins = XMLHandler(dataset_config['PART_TYPE'], flags.binning_file)
         geom_conv = GeomConverter(bins)
 
     def LoadSamples(fname):
@@ -275,8 +278,8 @@ if(not flags.sample):
     energies = []
     data_dict = {}
     for model in models:
-
-        checkpoint_folder = '../models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'], model)
+        
+        checkpoint_folder = '../models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'], model) # DOUG removed double dot before /models
         if(flags.generated == ""):
             f_sample = os.path.join(checkpoint_folder,'generated_{}_{}.h5'.format(dataset_config['CHECKPOINT_NAME'], model))
         else:
