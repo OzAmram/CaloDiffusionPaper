@@ -255,8 +255,11 @@ class CaloDiffu(nn.Module):
 
     def do_time_embed(self, t = None, embed_type = "identity",  sigma = None,):
         if(self.discrete_time):
-            if(sigma is None): sigma = self.sqrt_one_minus_alphas_cumprod[t]
-
+            if(sigma is None): 
+                # identify tensor device so we can match index tensor t
+                cumprod_device = self.sqrt_one_minus_alphas_cumprod.device 
+                # move index tensor t to indexed tensor device before operation
+                sigma = self.sqrt_one_minus_alphas_cumprod[t.to(cumprod_device)] 
             if(embed_type == "identity" or embed_type == 'sin'):
                 return t
             if(embed_type == "scaled"):

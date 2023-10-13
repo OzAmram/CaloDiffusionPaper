@@ -27,6 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', action='store_true', default=False,help='Load pretrained weights to continue the training')
     parser.add_argument('--seed', type=int, default=1234,help='Pytorch seed')
     parser.add_argument('--reset_training', action='store_true', default=False,help='Retrain')
+    parser.add_argument('--binning_file', type=str, default=None)
     flags = parser.parse_args()
 
     dataset_config = utils.LoadJson(flags.config)
@@ -88,11 +89,13 @@ if __name__ == '__main__':
     NN_embed = None
     if('NN' in shower_embed):
         if(dataset_num == 1):
-            binning_file = "../CaloChallenge/code/binning_dataset_1_photons.xml"
-            bins = XMLHandler("photon", binning_file)
+            if flags.binning_file is None:
+                flags.binning_file = "../CaloChallenge/code/binning_dataset_1_photons.xml"
+            bins = XMLHandler("photon", flags.binning_file)
         else: 
-            binning_file = "../CaloChallenge/code/binning_dataset_1_pions.xml"
-            bins = XMLHandler("pion", binning_file)
+            if flags.binning_file is None:
+                flags.binning_file = "../CaloChallenge/code/binning_dataset_1_pions.xml"
+            bins = XMLHandler("pion", flags.binning_file)
 
         NN_embed = NNConverter(bins = bins).to(device = device)
         
