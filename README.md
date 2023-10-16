@@ -1,4 +1,4 @@
-d# CaloDiffusion official repository
+# CaloDiffusion official repository
 
 Repo for diffusion based calorimeter generation.
 
