@@ -5,9 +5,11 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torchinfo import summary
-from utils import *
-from models import *
+from ae_models import *
+
 import sys
+sys.path.append("/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper/scripts")
+import utils
 
 
 class CaloEnco(nn.Module):
@@ -301,14 +303,14 @@ class CaloEnco(nn.Module):
     #         return pred
         #elif('hybrid' in self.training_obj):
 
-            sigma2 = (t_emb**2).reshape(-1,1,1,1,1)
-            c_skip = 1. / (sigma2 + 1.)
-            c_out = torch.sqrt(sigma2) / (sigma2 + 1.).sqrt()
+            #sigma2 = (t_emb**2).reshape(-1,1,1,1,1)
+            #c_skip = 1. / (sigma2 + 1.)
+            #c_out = torch.sqrt(sigma2) / (sigma2 + 1.).sqrt()
 
-            return c_skip * x + c_out * pred
+            #return c_skip * x + c_out * pred
 
     #Not sure if we need this function
-    @torch.no_grad()
+    #@torch.no_grad()
     #def p_sample(self, x, E, t, cold_noise_scale = 0., noise = None, sample_algo = 'ddpm', debug = False):
         #reverse the diffusion process (one step)
 
@@ -357,12 +359,12 @@ class CaloEnco(nn.Module):
 
 
 
-        if(debug): 
-            if(x0_pred is None):
-                x0_pred = (x - sqrt_one_minus_alphas_cumprod_t * noise_pred)/sqrt_alphas_cumprod_t
-            return out, x0_pred
-        return out
-
+        #if(debug): 
+        #    if(x0_pred is None):
+        #        x0_pred = (x - sqrt_one_minus_alphas_cumprod_t * noise_pred)/sqrt_alphas_cumprod_t
+        #    return out, x0_pred
+        #return out
+    '''
     def gen_cold_image(self, E, cold_noise_scale, noise = None):
 
         avg_shower, std_shower = self.lookup_avg_std_shower(E)
@@ -373,10 +375,10 @@ class CaloEnco(nn.Module):
         cold_scales = cold_noise_scale
 
         return torch.add(avg_shower, cold_scales * (noise * std_shower))
+    '''
 
 
-
-
+    '''
     @torch.no_grad()
     def Sample(self, E, num_steps = 200, cold_noise_scale = 0., sample_algo = 'ddpm', debug = False, sample_offset = 0, sample_step = 1):
         """Generate samples from diffusion model.
@@ -439,6 +441,6 @@ class CaloEnco(nn.Module):
             return x.detach().cpu().numpy(), xs, x0s
         else:   
             return x.detach().cpu().numpy()
-
+    '''
     
         

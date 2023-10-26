@@ -460,7 +460,8 @@ class CondAE(nn.Module):
 
         t = self.time_mlp(time)
         c = self.cond_mlp(cond)
-        conditions = torch.cat([t,c], axis = -1)
+        #conditions = torch.cat([t,c], axis = -1)
+        conditions = c
 
         # h = []
 

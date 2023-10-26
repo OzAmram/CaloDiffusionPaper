@@ -6,10 +6,15 @@ import h5py as h5
 import torch.optim as optim
 import torch.utils.data as torchdata
 
-import utils
 from ae_models import *
 from CaloEnco import *
 
+import sys
+sys.path.append("..")
+from utils import *
+
+sys.path.append("/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper")
+from CaloChallenge.code.XMLHandler import *
 
 if __name__ == '__main__':
     print("TRAIN AUTOENCODER")
@@ -131,16 +136,15 @@ if __name__ == '__main__':
 
     if(flags.model == "AE"):
             shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
-            model = CondAE().to(device = device)
+            model = CaloEnco(shape, config=dataset_config, training_obj=training_obj, NN_embed=NN_embed, nsteps=dataset_config['NSTEPS'],
+                cold_diffu=False, avg_showers=None, std_showers=std_showers, E_bins=E_bins).to(device = device)
 
             #sometimes save only weights, sometimes save other info
             if('model_state_dict' in checkpoint.keys()): model.load_state_dict(checkpoint['model_state_dict'])
             elif(len(checkpoint.keys()) > 1): model.load_state_dict(checkpoint)
-
-
-        else:
-            print("Model %s not supported!" % flags.model)
-            exit(1)
+    else:
+        print("Model %s not supported!" % flags.model)
+        exit(1)
 
     os.system('cp ae_models.py {}'.format(checkpoint_folder)) # bkp of model def
     os.system('cp {} {}'.format(flags.config,checkpoint_folder)) # bkp of config file
