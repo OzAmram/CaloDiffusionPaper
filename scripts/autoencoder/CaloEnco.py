@@ -30,7 +30,8 @@ class CaloEnco(nn.Module):
         self.fully_connected = ('FCN' in self.shower_embed)
         self.NN_embed = NN_embed
 
-        supported = ['noise_pred', 'mean_pred', 'hybrid']
+        # supported = ['noise_pred', 'mean_pred', 'hybrid']
+        supported = ['mean_pred']
         is_obj = [s in self.training_obj for s in supported]
         if(not any(is_obj)):
             print("Training objective %s not supported!" % self.training_obj)
@@ -407,7 +408,7 @@ class CaloEnco(nn.Module):
         xs = []
         x0s = []
         self.prev_noise = x_start
-
+        
         time_steps = list(range(0, num_steps - sample_offset, sample_step))
         time_steps.reverse()
 

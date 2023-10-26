@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     
     parser.add_argument('--data_folder', default='/wclustre/cms_mlsim/denoise/CaloChallenge/', help='Folder containing data and MC files')
-    parser.add_argument('--model', default='AE', help='AE model to train') #CHANGED DEFAULT & HELP -CK
+    parser.add_argument('--model', default='AE', help='Diffusion model to train')
     parser.add_argument('-c', '--config', default='configs/test.json', help='Config file with training parameters')
     parser.add_argument('--nevts', type=int,default=-1, help='Number of events to load')
     parser.add_argument('--frac', type=float,default=0.85, help='Fraction of total events used for training')
@@ -43,8 +43,7 @@ if __name__ == '__main__':
     batch_size = dataset_config['BATCH']
     num_epochs = dataset_config['MAXEPOCH']
     early_stop = dataset_config['EARLYSTOP']
-    #training_obj = dataset_config.get('TRAINING_OBJ', 'mean_pred')
-    training_obj = 'mean_pred'
+    training_obj = dataset_config.get('TRAINING_OBJ', 'noise_pred')
     loss_type = dataset_config.get("LOSS_TYPE", "l2")
     dataset_num = dataset_config.get('DATASET_NUM', 2)
     shower_embed = dataset_config.get('SHOWER_EMBED', '')
@@ -182,11 +181,10 @@ if __name__ == '__main__':
             E = E.to(device = device)
 
             t = torch.randint(0, model.nsteps, (data.size()[0],), device=device).long()
-            #noise = torch.randn_like(data) #REMOVED NOISE -CK
-
+            noise = torch.randn_like(data)
             #print('data', torch.mean(data), torch.std(data))
-            #if(cold_diffu): #cold diffusion interpolates from avg showers instead of pure noise #REMOVED DIFFU -CK
-                #noise = model.gen_cold_image(E, cold_noise_scale, noise) #REMOVED DIFFU -CK
+            if(cold_diffu): #cold diffusion interpolates from avg showers instead of pure noise
+                noise = model.gen_cold_image(E, cold_noise_scale, noise)
                 
 
             batch_loss = model.compute_loss() # COMPUTE OUR OWN MSE LOSS, DELETED WHAT WAS HERE PRIOR
