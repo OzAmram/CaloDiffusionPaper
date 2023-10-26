@@ -12,7 +12,7 @@ import sys
 
 class CaloEnco(nn.Module):
     """Autoencoder for latent diffusion"""
-    def __init__(self, data_shape, config=None, R_Z_inputs = False, training_obj = 'noise_pred', nsteps = 400,
+    def __init__(self, data_shape, config=None, R_Z_inputs = False, training_obj = 'mean_pred', nsteps = 400,
                     cold_diffu = False, E_bins = None, avg_showers = None, std_showers = None, NN_embed = None):
         super(CaloDiffu, self).__init__()
         self._data_shape = data_shape
@@ -21,7 +21,8 @@ class CaloEnco(nn.Module):
         self._num_embed = self.config['EMBED']
         self.num_heads=1
         self.nsteps = nsteps
-        self.cold_diffu = cold_diffu
+        #DO I NEED TO COMMENT OUT COLD DIFFUSION?
+        #self.cold_diffu = cold_diffu
         self.E_bins = E_bins
         self.avg_showers = avg_showers
         self.std_showers = std_showers
@@ -30,8 +31,10 @@ class CaloEnco(nn.Module):
         self.fully_connected = ('FCN' in self.shower_embed)
         self.NN_embed = NN_embed
 
-        # supported = ['noise_pred', 'mean_pred', 'hybrid']
-        supported = ['mean_pred']
+        #Carina
+        #supported = ['noise_pred', 'mean_pred', 'hybrid'] Up to Carina in training script, tell her and/or remove noise_pred
+        # Take time to see what both mean_pred and hybrid are
+        supported = ['mean_pred'] # Safety gap for Carina
         is_obj = [s in self.training_obj for s in supported]
         if(not any(is_obj)):
             print("Training objective %s not supported!" % self.training_obj)
@@ -47,9 +50,10 @@ class CaloEnco(nn.Module):
         if(torch.cuda.is_available()): device = torch.device('cuda')
         else: device = torch.device('cpu')
 
-        #Minimum and maximum maximum variance of noise
-        self.beta_start = 0.0001
-        self.beta_end = config.get("BETA_MAX", 0.02)
+        #Minimum and maximum maximum variance of noise 
+        #May not need because noise will not included in AE
+        #self.beta_start = 0.0001
+        #self.beta_end = config.get("BETA_MAX", 0.02)
 
         #linear schedule
         schedd = config.get("NOISE_SCHED", "linear")
@@ -165,7 +169,7 @@ class CaloEnco(nn.Module):
         return self.avg_showers[idxs], self.std_showers[idxs]
 
     
-    def noise_image(self, data = None, t = None, noise = None):
+    #def noise_image(self, data = None, t = None, noise = None):
 
         if(noise is None): noise = torch.randn_like(data)
 
@@ -180,20 +184,23 @@ class CaloEnco(nn.Module):
             print("non discrete time not supported")
             exit(1)
 
+    #KEEGAN
 
-    def compute_loss(self, data, energy, noise = None, t = None, loss_type = "l2", rnd_normal = None, energy_loss_scale = 1e-2):
-        if noise is None:
-            noise = torch.randn_like(data)
+    #def compute_loss(self, data, energy, noise = None, t = None, loss_type = "mse", rnd_normal = None, energy_loss_scale = 1e-2):
+    def compute_loss(self, data, energy, t = None, loss_type = "mse", rnd_normal = None, energy_loss_scale = 1e-2):
+        #Do I need to comment out lines 189-190 if noise_image() is already commented out?
+        #if noise is None:
+            #noise = torch.randn_like(data)
 
         if(self.discrete_time): 
             if(t is None): t = torch.randint(0, self.nsteps, (data.size()[0],), device=data.device).long()
-            x_noisy = self.noise_image(data, t, noise=noise)
+            #x_noisy = self.noise_image(data, t, noise=noise)
             sigma = None
             sigma2 = extract(self.sqrt_one_minus_alphas_cumprod, t, data.shape)**2
         else:
             if(rnd_normal is None): rnd_normal = torch.randn((data.size()[0],), device=data.device)
             sigma = (rnd_normal * self.P_std + self.P_mean).exp()
-            x_noisy = data + torch.reshape(sigma, (data.shape[0], 1,1,1,1)) * noise
+            #x_noisy = data + torch.reshape(sigma, (data.shape[0], 1,1,1,1)) * noise
             sigma2 = sigma**2
 
 
@@ -201,45 +208,50 @@ class CaloEnco(nn.Module):
         t_emb = self.do_time_embed(t, self.time_embed, sigma)
 
 
-        pred = self.pred(x_noisy, energy, t_emb)
+        #pred = self.pred(x_noisy, energy, t_emb)
+        #call prediction to predict with denoised data
+        pred = self.pred(data, energy, t_emb)
 
         weight = 1.
         x0_pred = None
-        if('hybrid' in self.training_obj ):
+        #if('hybrid' in self.training_obj ):
 
-            c_skip = torch.reshape(1. / (sigma2 + 1.), (data.shape[0], 1,1,1,1))
-            c_out = torch.reshape(1./ (1. + 1./sigma2).sqrt(), (data.shape[0], 1,1,1,1))
-            weight = torch.reshape(1. + (1./ sigma2), (data.shape[0], 1,1,1,1))
+            #c_skip = torch.reshape(1. / (sigma2 + 1.), (data.shape[0], 1,1,1,1))
+            #c_out = torch.reshape(1./ (1. + 1./sigma2).sqrt(), (data.shape[0], 1,1,1,1))
+            #weight = torch.reshape(1. + (1./ sigma2), (data.shape[0], 1,1,1,1))
 
             #target = (data - c_skip * x_noisy)/c_out
 
 
-            x0_pred = pred = c_skip * x_noisy + c_out * pred
-            target = data
+            #x0_pred = pred = c_skip * x_noisy + c_out * pred
+            #target = data
 
-        elif('noise_pred' in self.training_obj):
-            target = noise
-            weight = 1.
-            if('energy' in self.training_obj): 
-                sqrt_one_minus_alphas_cumprod_t = extract(self.sqrt_one_minus_alphas_cumprod, t, data.shape)
-                sqrt_alphas_cumprod_t = extract(self.sqrt_alphas_cumprod, t, data.shape)
-                x0_pred = (x_noisy - sqrt_one_minus_alphas_cumprod_t * pred)/sqrt_alphas_cumprod_t
-        elif('mean_pred' in self.training_obj):
+        #elif('noise_pred' in self.training_obj):
+            #target = noise
+            #weight = 1.
+            #if('energy' in self.training_obj): 
+                #sqrt_one_minus_alphas_cumprod_t = extract(self.sqrt_one_minus_alphas_cumprod, t, data.shape)
+                #sqrt_alphas_cumprod_t = extract(self.sqrt_alphas_cumprod, t, data.shape)
+                #x0_pred = (x_noisy - sqrt_one_minus_alphas_cumprod_t * pred)/sqrt_alphas_cumprod_t
+        if('mean_pred' in self.training_obj):
             target = data
             weight = 1./ sigma2
             x0_pred = pred
 
+    #KEEGAN --> HOW DO THEY COMPUTE LOSS HERE
 
-        if loss_type == 'l1':
-            loss = torch.nn.functional.l1_loss(target, pred)
-        elif loss_type == 'l2':
-            if('weight' in self.training_obj):
-                loss = (weight * ((pred - data) ** 2)).sum() / (torch.mean(weight) * self.nvoxels)
-            else:
-                loss = torch.nn.functional.mse_loss(target, pred)
+        if loss_type == 'mse':
+            loss = torch.nn.functional.mse_loss(target, pred)
+        #if loss_type == 'l1':
+            #loss = torch.nn.functional.l1_loss(target, pred)
+        #elif loss_type == 'l2':
+            #if('weight' in self.training_obj):
+                #loss = (weight * ((pred - data) ** 2)).sum() / (torch.mean(weight) * self.nvoxels)
+            #else:
+                #loss = torch.nn.functional.mse_loss(target, pred)
 
-        elif loss_type == "huber":
-            loss =torch.nn.functional.smooth_l1_loss(target, pred)
+        #elif loss_type == "huber":
+            #loss =torch.nn.functional.smooth_l1_loss(target, pred)
         else:
             raise NotImplementedError()
 
@@ -283,11 +295,11 @@ class CaloEnco(nn.Module):
         if(self.NN_embed is not None): out = self.NN_embed.dec(out).to(x.device)
         return out
 
-    def denoise(self, x, E,t_emb):
-        pred = self.pred(x, E, t_emb)
-        if('mean_pred' in self.training_obj):
-            return pred
-        elif('hybrid' in self.training_obj):
+    # def denoise(self, x, E, t_emb):
+    #     pred = self.pred(x, E, t_emb)
+    #     if('mean_pred' in self.training_obj):
+    #         return pred
+        #elif('hybrid' in self.training_obj):
 
             sigma2 = (t_emb**2).reshape(-1,1,1,1,1)
             c_skip = 1. / (sigma2 + 1.)
@@ -295,53 +307,53 @@ class CaloEnco(nn.Module):
 
             return c_skip * x + c_out * pred
 
-
+    #Not sure if we need this function
     @torch.no_grad()
-    def p_sample(self, x, E, t, cold_noise_scale = 0., noise = None, sample_algo = 'ddpm', debug = False):
+    #def p_sample(self, x, E, t, cold_noise_scale = 0., noise = None, sample_algo = 'ddpm', debug = False):
         #reverse the diffusion process (one step)
 
-        if(noise is None): 
-            noise = torch.randn(x.shape, device = x.device)
-            if(self.cold_diffu): #cold diffusion interpolates from avg showers instead of pure noise
-                noise = self.gen_cold_image(E, cold_noise_scale, noise)
+        #if(noise is None): 
+        #     noise = torch.randn(x.shape, device = x.device)
+        #     if(self.cold_diffu): #cold diffusion interpolates from avg showers instead of pure noise
+        #         noise = self.gen_cold_image(E, cold_noise_scale, noise)
 
-        betas_t = extract(self.betas, t, x.shape)
-        sqrt_one_minus_alphas_cumprod_t = extract(self.sqrt_one_minus_alphas_cumprod, t, x.shape)
-        sqrt_recip_alphas_t = extract(self.sqrt_recip_alphas, t, x.shape)
-        sqrt_alphas_cumprod_t = extract(self.sqrt_alphas_cumprod, t, x.shape)
-        posterior_variance_t = extract(self.posterior_variance, t, x.shape)
+        # betas_t = extract(self.betas, t, x.shape)
+        # sqrt_one_minus_alphas_cumprod_t = extract(self.sqrt_one_minus_alphas_cumprod, t, x.shape)
+        # sqrt_recip_alphas_t = extract(self.sqrt_recip_alphas, t, x.shape)
+        # sqrt_alphas_cumprod_t = extract(self.sqrt_alphas_cumprod, t, x.shape)
+        # posterior_variance_t = extract(self.posterior_variance, t, x.shape)
 
-        t_emb = self.do_time_embed(t, self.time_embed)
+        # t_emb = self.do_time_embed(t, self.time_embed)
 
 
-        pred = self.pred(x, E, t_emb)
-        if('noise_pred' in self.training_obj):
-            noise_pred = pred
-            x0_pred = None
-        elif('mean_pred' in self.training_obj):
-            x0_pred = pred
-            noise_pred = (x - sqrt_alphas_cumprod_t * x0_pred)/sqrt_one_minus_alphas_cumprod_t
-        elif('hybrid' in self.training_obj):
+        # pred = self.pred(x, E, t_emb)
+        # #if('noise_pred' in self.training_obj):
+        #     noise_pred = pred
+        #     x0_pred = None
+        # if('mean_pred' in self.training_obj):
+        #     x0_pred = pred
+        #     noise_pred = (x - sqrt_alphas_cumprod_t * x0_pred)/sqrt_one_minus_alphas_cumprod_t
+        #elif('hybrid' in self.training_obj):
 
-            sigma2 = extract(self.sqrt_one_minus_alphas_cumprod, t, x.shape)**2
-            c_skip = 1. / (sigma2 + 1.)
-            c_out = torch.sqrt(sigma2) / (sigma2 + 1.).sqrt()
+            #sigma2 = extract(self.sqrt_one_minus_alphas_cumprod, t, x.shape)**2
+            #c_skip = 1. / (sigma2 + 1.)
+            #c_out = torch.sqrt(sigma2) / (sigma2 + 1.).sqrt()
 
-            x0_pred = c_skip * x + c_out * pred
-            noise_pred = (x - sqrt_alphas_cumprod_t * x0_pred)/sqrt_one_minus_alphas_cumprod_t
+            #x0_pred = c_skip * x + c_out * pred
+            #noise_pred = (x - sqrt_alphas_cumprod_t * x0_pred)/sqrt_one_minus_alphas_cumprod_t
 
         
 
 
-        if(sample_algo == 'ddpm'):
-            # Sampling algo from https://arxiv.org/abs/2006.11239
-            # Use results from our model (noise predictor) to predict the mean of posterior distribution of prev step
-            post_mean = sqrt_recip_alphas_t * ( x - betas_t * noise_pred  / sqrt_one_minus_alphas_cumprod_t)
-            out = post_mean + torch.sqrt(posterior_variance_t) * noise 
-            if t[0] == 0: out = post_mean
-        else:
-            print("Algo %s not supported!" % sample_algo)
-            exit(1)
+        # if(sample_algo == 'ddpm'):
+        #     # Sampling algo from https://arxiv.org/abs/2006.11239
+        #     # Use results from our model (noise predictor) to predict the mean of posterior distribution of prev step
+        #     post_mean = sqrt_recip_alphas_t * ( x - betas_t * noise_pred  / sqrt_one_minus_alphas_cumprod_t)
+        #     out = post_mean + torch.sqrt(posterior_variance_t) * noise 
+        #     if t[0] == 0: out = post_mean
+        # else:
+        #     print("Algo %s not supported!" % sample_algo)
+        #     exit(1)
 
 
 
@@ -408,7 +420,7 @@ class CaloEnco(nn.Module):
         xs = []
         x0s = []
         self.prev_noise = x_start
-        
+
         time_steps = list(range(0, num_steps - sample_offset, sample_step))
         time_steps.reverse()
 
