@@ -10,7 +10,7 @@ import time, sys, copy
 import utils
 import torch
 import torch.utils.data as torchdata
-from CaloDiffu import *
+from CaloEnco import *
 # import h5py
 
 if(torch.cuda.is_available()): device = torch.device('cuda')
@@ -33,7 +33,7 @@ parser.add_argument('--model_loc', default='test', help='Location of model')
 parser.add_argument('--config', default='config_dataset2.json', help='Training parameters')
 parser.add_argument('--nevts', type=int,default=-1, help='Number of events to load')
 parser.add_argument('--batch_size', type=int, default=100, help='Batch size for generation')
-parser.add_argument('--model', default='Diffu', help='Diffusion model to load. Options are: Diffu, AE, all')
+parser.add_argument('--model', default='AE', help='Diffusion model to load. Options are: Diffu, AE, all')
 parser.add_argument('--plot_label', default='', help='Add to plot')
 parser.add_argument('--sample', action='store_true', default=False,help='Sample from learned model')
 parser.add_argument('--sample_steps', default = -1, type = int, help='How many steps for sampling (override config)')
@@ -49,9 +49,10 @@ nevts = int(flags.nevts)
 dataset_config = utils.LoadJson(flags.config)
 emax = dataset_config['EMAX']
 emin = dataset_config['EMIN']
-cold_diffu = dataset_config.get('COLD_DIFFU', False)
-cold_noise_scale = dataset_config.get("COLD_NOISE", 1.0)
-training_obj = dataset_config.get('TRAINING_OBJ', 'noise_pred')
+#cold_diffu = dataset_config.get('COLD_DIFFU', False)
+#cold_noise_scale = dataset_config.get("COLD_NOISE", 1.0)
+#training_obj = dataset_config.get('TRAINING_OBJ', 'noise_pred')
+training_obj = 'mean_pred'
 dataset_num = dataset_config.get('DATASET_NUM', 2)
 
 sample_steps = dataset_config["NSTEPS"] if flags.sample_steps < 0 else flags.sample_steps
@@ -121,13 +122,14 @@ if flags.sample:
     data_loader = torchdata.DataLoader(torch_dataset, batch_size = batch_size, shuffle = False)
 
     avg_showers = std_showers = E_bins = None
+    '''
     if(cold_diffu or flags.model == 'Avg'):
         f_avg_shower = h5.File(dataset_config["AVG_SHOWER_LOC"])
         #Already pre-processed
         avg_showers = torch.from_numpy(f_avg_shower["avg_showers"][()].astype(np.float32)).to(device = device)
         std_showers = torch.from_numpy(f_avg_shower["std_showers"][()].astype(np.float32)).to(device = device)
         E_bins = torch.from_numpy(f_avg_shower["E_bins"][()].astype(np.float32)).to(device = device)
-
+    '''
     NN_embed = None
     if('NN' in shower_embed):
         if(dataset_num == 1):
@@ -142,8 +144,7 @@ if flags.sample:
         NN_embed = NNConverter(bins = bins).to(device = device)
 
 
-
-    if(flags.model == "AE"):
+    if(flags.model == "AE"): # DOUG MODIFY THIS IF BLOCK FOR OUR AE
         print("Loading AE from " + flags.model_loc)
         model = CaloAE(dataset_config['SHAPE_PAD'][1:], batch_size, config=dataset_config).to(device=device)
 
@@ -162,6 +163,7 @@ if flags.sample:
             else: generated = np.concatenate((generated, gen))
             del E, d_batch
 
+    '''
     elif(flags.model == "Diffu"):
         print("Loading Diffu model from " + flags.model_loc)
 
@@ -207,7 +209,7 @@ if flags.sample:
         model = CaloDiffu(dataset_config['SHAPE_PAD'][1:], nevts,config=dataset_config, avg_showers = avg_showers, std_showers = std_showers, E_bins = E_bins ).to(device = device)
 
         generated = model.gen_cold_image(torch_E_tensor, cold_noise_scale).numpy()
-
+    '''
     #print("GENERATED", np.mean(generated), np.std(generated), np.amax(generated), np.amin(generated))
 
     if(not orig_shape): generated = generated.reshape(dataset_config["SHAPE"])
