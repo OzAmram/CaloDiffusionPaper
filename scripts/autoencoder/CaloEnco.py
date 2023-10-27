@@ -9,14 +9,14 @@ from ae_models import *
 
 import sys
 sys.path.append("/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper/scripts")
-import utils
+from utils import *
 
 
 class CaloEnco(nn.Module):
     """Autoencoder for latent diffusion"""
     def __init__(self, data_shape, config=None, R_Z_inputs = False, training_obj = 'mean_pred', nsteps = 400,
                     cold_diffu = False, E_bins = None, avg_showers = None, std_showers = None, NN_embed = None):
-        super(CaloDiffu, self).__init__()
+        super(CaloEnco, self).__init__()
         self._data_shape = data_shape
         self.nvoxels = np.prod(self._data_shape)
         self.config = config
@@ -129,12 +129,12 @@ class CaloEnco(nn.Module):
             summary_shape = [calo_summary_shape, [1], [1]]
 
 
-            self.model = CondUnet(cond_dim = cond_dim, out_dim = 1, channels = in_channels, layer_sizes = layer_sizes, block_attn = block_attn, mid_attn = mid_attn, 
-                    cylindrical =  config.get('CYLINDRICAL', False), compress_Z = compress_Z, data_shape = calo_summary_shape,
-                    cond_embed = (self.E_embed == 'sin'), time_embed = (self.time_embed == 'sin') )
+            self.model = CondAE(cond_dim = cond_dim, out_dim = 1, channels = in_channels, layer_sizes = layer_sizes, block_attn = block_attn, mid_attn = mid_attn, 
+                    cylindrical=config.get('CYLINDRICAL', False), compress_Z = compress_Z, data_shape = calo_summary_shape,
+                    cond_embed = (self.E_embed == 'sin'), time_embed = False ) # DOUG REMOVED TIME EMBEDDING to match sizes
 
         print("\n\n Model: \n")
-        summary(self.model, summary_shape)
+        #summary(self.model, summary_shape)
 
     #wrapper for backwards compatability
     def load_state_dict(self, d):

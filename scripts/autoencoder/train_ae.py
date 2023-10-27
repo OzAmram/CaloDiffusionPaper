@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser.add_argument('--binning_file', type=str, default=None)
     flags = parser.parse_args()
 
-    dataset_config = utils.LoadJson(flags.config)
+    dataset_config = LoadJson(flags.config)
 
     print("TRAINING OPTIONS")
     print(dataset_config, flush = True)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     # LOAD IN DATA
     for i, dataset in enumerate(dataset_config['FILES']):
-        data_,e_ = utils.DataLoader(
+        data_,e_ = DataLoader(
             os.path.join(flags.data_folder,dataset),
             dataset_config['SHAPE_PAD'],
             emax = dataset_config['EMAX'],emin = dataset_config['EMIN'],
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     if(flags.model == "AE"):
             shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
             model = CaloEnco(shape, config=dataset_config, training_obj=training_obj, NN_embed=NN_embed, nsteps=dataset_config['NSTEPS'],
-                cold_diffu=False, avg_showers=None, std_showers=std_showers, E_bins=E_bins).to(device = device)
+                cold_diffu=False, avg_showers=None, std_showers=None, E_bins=None).to(device = device)
 
             #sometimes save only weights, sometimes save other info
             if('model_state_dict' in checkpoint.keys()): model.load_state_dict(checkpoint['model_state_dict'])
@@ -193,13 +193,13 @@ if __name__ == '__main__':
                 #noise = model.gen_cold_image(E, cold_noise_scale, noise) #REMOVED DIFFU -CK
                 
 
-            batch_loss = model.compute_loss() # COMPUTE OUR OWN MSE LOSS, DELETED WHAT WAS HERE PRIOR
+            batch_loss = model.compute_loss(data, E, t=t, loss_type='mse', energy_loss_scale=energy_loss_scale) # COMPUTE OUR OWN MSE LOSS, DELETED WHAT WAS HERE PRIOR
             batch_loss.backward()
 
             optimizer.step()
             train_loss+=batch_loss.item()
 
-            del data, E, noise, batch_loss
+            del data, E, batch_loss # DOUG REMOVED NOISE FROM OUTPUTS
 
         train_loss = train_loss/len(loader_train)
         training_losses[epoch] = train_loss
@@ -213,10 +213,10 @@ if __name__ == '__main__':
 
             t = torch.randint(0, model.nsteps, (vdata.size()[0],), device=device).long()
 
-            batch_loss = model.compute_loss() # COMPUTE OUR OWN MSE LOSS, DELETED WHAT WAS HERE PRIOR
+            batch_loss = model.compute_loss(vdata, vE, t=t, loss_type='mse', energy_loss_scale=energy_loss_scale) # COMPUTE OUR OWN MSE LOSS, DELETED WHAT WAS HERE PRIOR
 
             val_loss+=batch_loss.item()
-            del vdata,vE, noise, batch_loss
+            del vdata,vE, batch_loss # DOUG REMOVED NOISE FROM OUTPUTS
 
         val_loss = val_loss/len(loader_val)
         #scheduler.step(torch.tensor([val_loss]))

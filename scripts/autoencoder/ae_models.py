@@ -149,10 +149,12 @@ class ResnetBlock(nn.Module):
     def forward(self, x, time_emb=None):
         h = self.block1(x)
 
+        '''
         if exists(self.mlp) and exists(time_emb):
             time_emb = self.mlp(time_emb)
             time_emb = rearrange(time_emb, "b c -> b c 1 1 1")
             h = h + time_emb
+        '''
 
         h = self.block2(h)
         return h + self.res_conv(x)
@@ -442,7 +444,7 @@ class CondAE(nn.Module):
             self.ups.append(
                 nn.ModuleList(
                     [
-                        block_klass(dim_out * 2, dim_in, cond_emb_dim=cond_dim), 
+                        block_klass(dim_out, dim_in, cond_emb_dim=cond_dim), # DOUG REMOVED *2 FROM DIM_OUT
                         block_klass(dim_in, dim_in, cond_emb_dim=cond_dim), 
                         Upsample(dim_in, extra_upsample, cylindrical, compress_Z = compress_Z) if not is_last else nn.Identity(),
                     ]
