@@ -10,7 +10,7 @@ from ae_models import *
 from CaloEnco import *
 
 import sys
-sys.path.append("..")
+sys.path.append("/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper/scripts")
 from utils import *
 
 sys.path.append("/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper")
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser.add_argument('--binning_file', type=str, default=None)
     flags = parser.parse_args()
 
-    dataset_config = utils.LoadJson(flags.config)
+    dataset_config = LoadJson(flags.config)
 
     print("TRAINING OPTIONS")
     print(dataset_config, flush = True)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     # LOAD IN DATA
     for i, dataset in enumerate(dataset_config['FILES']):
-        data_,e_ = utils.DataLoader(
+        data_,e_ = DataLoader(
             os.path.join(flags.data_folder,dataset),
             dataset_config['SHAPE_PAD'],
             emax = dataset_config['EMAX'],emin = dataset_config['EMIN'],
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     if(flags.model == "AE"):
             shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
             model = CaloEnco(shape, config=dataset_config, training_obj=training_obj, NN_embed=NN_embed, nsteps=dataset_config['NSTEPS'],
-                cold_diffu=False, avg_showers=None, std_showers=std_showers, E_bins=E_bins).to(device = device)
+                cold_diffu=False, avg_showers=None, std_showers=None, E_bins=None).to(device = device)
 
             #sometimes save only weights, sometimes save other info
             if('model_state_dict' in checkpoint.keys()): model.load_state_dict(checkpoint['model_state_dict'])

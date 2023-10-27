@@ -1,0 +1,1013 @@
+TRAIN DIFFU
+TRAINING OPTIONS
+{'FILES': ['dataset_2_1.hdf5'], 'EVAL': ['dataset_2_2.hdf5'], 'AVG_SHOWER_LOC': '/wclustre/cms_mlsim/denoise/CaloChallenge/dataset_2_avg_showers.hdf5', 'DATASET_NUM': 2, 'HOLDOUT': 0, 'SHAPE_ORIG': [-1, 6480], 'SHAPE': [-1, 45, 16, 9, 1], 'SHAPE_PAD': [-1, 1, 45, 16, 9], 'BATCH': 128, 'LR': '4e-4', 'MAXEPOCH': 1000, 'NLAYERS': 3, 'EARLYSTOP': 20, 'LAYER_SIZE_AE': [32, 64, 64, 32], 'DIM_RED_AE': [0, 2, 0, 2], 'LAYER_SIZE_UNET': [16, 16, 16, 32], 'COND_SIZE_UNET': 128, 'KERNEL': [3, 3, 3], 'STRIDE': [3, 2, 2], 'BLOCK_ATTN': True, 'MID_ATTN': True, 'COMPRESS_Z': True, 'ACT': 'swish', 'EMBED': 128, 'EMAX': 1000.0, 'EMIN': 1.0, 'ECUT': 1.51e-05, 'logE': True, 'MAXDEP': 2, 'CYLINDRICAL': True, 'SHOWERMAP': 'logit-norm', 'R_Z_INPUT': True, 'BETA_MAX': 0.02, 'NOISE_SCHED': 'cosine', 'NSTEPS': 400, 'COLD_DIFFU': False, 'COLD_NOISE': 1.0, 'TRAINING_OBJ': 'noise_pred', 'LOSS_TYPE': 'l2', 'TIME_EMBED': 'sigma', 'COND_EMBED': 'id', 'CHECKPOINT_NAME': 'dataset2'}
+Event start, stop:  0 None
+dset 2
+Data Shape (100000, 1, 45, 16, 9)
+
+
+ Model: 
+
+=========================================================================================================
+Layer (type:depth-idx)                                  Output Shape              Param #
+=========================================================================================================
+CondUnet                                                [1, 1, 45, 16, 9]         --
+├─CylindricalConv: 1-1                                  [1, 16, 45, 16, 9]        --
+│    └─Conv3d: 2-1                                      [1, 16, 45, 16, 9]        1,312
+├─Sequential: 1-2                                       [1, 64]                   --
+│    └─Unflatten: 2-2                                   [1, 1]                    --
+│    └─Linear: 2-3                                      [1, 32]                   64
+│    └─GELU: 2-4                                        [1, 32]                   --
+│    └─Linear: 2-5                                      [1, 64]                   2,112
+│    └─GELU: 2-6                                        [1, 64]                   --
+│    └─Linear: 2-7                                      [1, 64]                   4,160
+├─Sequential: 1-3                                       [1, 64]                   --
+│    └─Unflatten: 2-8                                   [1, 1]                    --
+│    └─Linear: 2-9                                      [1, 32]                   64
+│    └─GELU: 2-10                                       [1, 32]                   --
+│    └─Linear: 2-11                                     [1, 64]                   2,112
+│    └─GELU: 2-12                                       [1, 64]                   --
+│    └─Linear: 2-13                                     [1, 64]                   4,160
+├─ModuleList: 1-10                                      --                        (recursive)
+│    └─ModuleList: 2-16                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-1                            [1, 16, 45, 16, 9]        15,984
+│    │    └─ResnetBlock: 3-2                            [1, 16, 45, 16, 9]        15,984
+├─ModuleList: 1-9                                       --                        (recursive)
+│    └─Residual: 2-15                                   [1, 16, 45, 16, 9]        --
+│    │    └─PreNorm: 3-3                                [1, 16, 45, 16, 9]        2,128
+├─ModuleList: 1-10                                      --                        (recursive)
+│    └─ModuleList: 2-16                                 --                        (recursive)
+│    │    └─CylindricalConv: 3-4                        [1, 16, 23, 8, 4]         12,304
+│    └─ModuleList: 2-19                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-5                            [1, 16, 23, 8, 4]         15,984
+│    │    └─ResnetBlock: 3-6                            [1, 16, 23, 8, 4]         15,984
+├─ModuleList: 1-9                                       --                        (recursive)
+│    └─Residual: 2-18                                   [1, 16, 23, 8, 4]         --
+│    │    └─PreNorm: 3-7                                [1, 16, 23, 8, 4]         2,128
+├─ModuleList: 1-10                                      --                        (recursive)
+│    └─ModuleList: 2-19                                 --                        (recursive)
+│    │    └─CylindricalConv: 3-8                        [1, 16, 12, 4, 2]         12,304
+│    └─ModuleList: 2-22                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-9                            [1, 32, 12, 4, 2]         46,336
+│    │    └─ResnetBlock: 3-10                           [1, 32, 12, 4, 2]         59,616
+├─ModuleList: 1-9                                       --                        (recursive)
+│    └─Residual: 2-21                                   [1, 32, 12, 4, 2]         --
+│    │    └─PreNorm: 3-11                               [1, 32, 12, 4, 2]         4,256
+├─ModuleList: 1-10                                      --                        (recursive)
+│    └─ModuleList: 2-22                                 --                        (recursive)
+│    │    └─Identity: 3-12                              [1, 32, 12, 4, 2]         --
+├─ResnetBlock: 1-11                                     [1, 32, 12, 4, 2]         --
+│    └─Block: 2-23                                      [1, 32, 12, 4, 2]         --
+│    │    └─CylindricalConv: 3-13                       [1, 32, 12, 4, 2]         27,680
+│    │    └─GroupNorm: 3-14                             [1, 32, 12, 4, 2]         64
+│    │    └─SiLU: 3-15                                  [1, 32, 12, 4, 2]         --
+│    └─Sequential: 2-24                                 [1, 32]                   --
+│    │    └─SiLU: 3-16                                  [1, 128]                  --
+│    │    └─Linear: 3-17                                [1, 32]                   4,128
+│    └─Block: 2-25                                      [1, 32, 12, 4, 2]         --
+│    │    └─CylindricalConv: 3-18                       [1, 32, 12, 4, 2]         27,680
+│    │    └─GroupNorm: 3-19                             [1, 32, 12, 4, 2]         64
+│    │    └─SiLU: 3-20                                  [1, 32, 12, 4, 2]         --
+│    └─Identity: 2-26                                   [1, 32, 12, 4, 2]         --
+├─Residual: 1-12                                        [1, 32, 12, 4, 2]         --
+│    └─PreNorm: 2-27                                    [1, 32, 12, 4, 2]         --
+│    │    └─GroupNorm: 3-21                             [1, 32, 12, 4, 2]         64
+│    │    └─LinearAttention: 3-22                       [1, 32, 12, 4, 2]         4,192
+├─ResnetBlock: 1-13                                     [1, 32, 12, 4, 2]         --
+│    └─Block: 2-28                                      [1, 32, 12, 4, 2]         --
+│    │    └─CylindricalConv: 3-23                       [1, 32, 12, 4, 2]         27,680
+│    │    └─GroupNorm: 3-24                             [1, 32, 12, 4, 2]         64
+│    │    └─SiLU: 3-25                                  [1, 32, 12, 4, 2]         --
+│    └─Sequential: 2-29                                 [1, 32]                   --
+│    │    └─SiLU: 3-26                                  [1, 128]                  --
+│    │    └─Linear: 3-27                                [1, 32]                   4,128
+│    └─Block: 2-30                                      [1, 32, 12, 4, 2]         --
+│    │    └─CylindricalConv: 3-28                       [1, 32, 12, 4, 2]         27,680
+│    │    └─GroupNorm: 3-29                             [1, 32, 12, 4, 2]         64
+│    │    └─SiLU: 3-30                                  [1, 32, 12, 4, 2]         --
+│    └─Identity: 2-31                                   [1, 32, 12, 4, 2]         --
+├─ModuleList: 1-20                                      --                        (recursive)
+│    └─ModuleList: 2-34                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-31                           [1, 16, 12, 4, 2]         37,760
+│    │    └─ResnetBlock: 3-32                           [1, 16, 12, 4, 2]         15,984
+├─ModuleList: 1-19                                      --                        (recursive)
+│    └─Residual: 2-33                                   [1, 16, 12, 4, 2]         --
+│    │    └─PreNorm: 3-33                               [1, 16, 12, 4, 2]         2,128
+├─ModuleList: 1-20                                      --                        (recursive)
+│    └─ModuleList: 2-34                                 --                        (recursive)
+│    │    └─CylindricalConvTrans: 3-34                  [1, 16, 23, 8, 4]         12,304
+│    └─ModuleList: 2-37                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-35                           [1, 16, 23, 8, 4]         23,424
+│    │    └─ResnetBlock: 3-36                           [1, 16, 23, 8, 4]         15,984
+├─ModuleList: 1-19                                      --                        (recursive)
+│    └─Residual: 2-36                                   [1, 16, 23, 8, 4]         --
+│    │    └─PreNorm: 3-37                               [1, 16, 23, 8, 4]         2,128
+├─ModuleList: 1-20                                      --                        (recursive)
+│    └─ModuleList: 2-37                                 --                        (recursive)
+│    │    └─CylindricalConvTrans: 3-38                  [1, 16, 45, 16, 9]        12,304
+│    └─ModuleList: 2-40                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-39                           [1, 16, 45, 16, 9]        23,424
+│    │    └─ResnetBlock: 3-40                           [1, 16, 45, 16, 9]        15,984
+├─ModuleList: 1-19                                      --                        (recursive)
+│    └─Residual: 2-39                                   [1, 16, 45, 16, 9]        --
+│    │    └─PreNorm: 3-41                               [1, 16, 45, 16, 9]        2,128
+├─ModuleList: 1-20                                      --                        (recursive)
+│    └─ModuleList: 2-40                                 --                        (recursive)
+│    │    └─Identity: 3-42                              [1, 16, 45, 16, 9]        --
+├─Sequential: 1-21                                      [1, 1, 45, 16, 9]         --
+│    └─ResnetBlock: 2-41                                [1, 16, 45, 16, 9]        --
+│    │    └─Block: 3-43                                 [1, 16, 45, 16, 9]        6,960
+│    │    └─Block: 3-44                                 [1, 16, 45, 16, 9]        6,960
+│    │    └─Identity: 3-45                              [1, 16, 45, 16, 9]        --
+│    └─CylindricalConv: 2-42                            [1, 1, 45, 16, 9]         --
+│    │    └─Conv3d: 3-46                                [1, 1, 45, 16, 9]         17
+=========================================================================================================
+Total params: 517,969
+Trainable params: 517,969
+Non-trainable params: 0
+Total mult-adds (Units.MEGABYTES): 706.61
+=========================================================================================================
+Input size (MB): 0.08
+Forward/backward pass size (MB): 38.50
+Params size (MB): 2.07
+Estimated Total Size (MB): 40.65
+=========================================================================================================
+{'patience': 20, 'min_delta': 1e-05, 'counter': 0, 'min_validation_loss': inf, 'mode': 'diff'}
+Beginning epoch 0
+loss: 0.24164140336495593
+val_loss: 0.16180329151072745
+SAVING
+Beginning epoch 1
+loss: 0.14993409160384558
+val_loss: 0.15381464008557594
+SAVING
+Beginning epoch 2
+loss: 0.14296577547053646
+val_loss: 0.1464967531925541
+SAVING
+Beginning epoch 3
+loss: 0.14111223579349375
+val_loss: 0.14555504646594242
+SAVING
+Beginning epoch 4
+loss: 0.13783718571627052
+val_loss: 0.14343049655021248
+SAVING
+Beginning epoch 5
+loss: 0.1386321662960196
+val_loss: 0.13696361194222662
+SAVING
+Beginning epoch 6
+loss: 0.13687130467111902
+val_loss: 0.13505243642602938
+SAVING
+Beginning epoch 7
+loss: 0.13491581764660385
+val_loss: 0.1433728445258181
+SAVING
+Beginning epoch 8
+loss: 0.13338718035615477
+val_loss: 0.1342868111648802
+SAVING
+Beginning epoch 9
+loss: 0.13470199757948853
+val_loss: 0.13447766258554944
+SAVING
+Beginning epoch 10
+loss: 0.13537669182944118
+val_loss: 0.14104945894520163
+SAVING
+Beginning epoch 11
+loss: 0.13350513462061273
+val_loss: 0.1351261023368876
+SAVING
+Beginning epoch 12
+loss: 0.13086613344966916
+val_loss: 0.13267024044515724
+SAVING
+Beginning epoch 13
+loss: 0.13360280905451094
+val_loss: 0.13379481024408746
+SAVING
+Beginning epoch 14
+loss: 0.1340406811551044
+val_loss: 0.132835825557931
+SAVING
+Beginning epoch 15
+loss: 0.13258354202248995
+val_loss: 0.14070083870220992
+SAVING
+Beginning epoch 16
+loss: 0.13750369672040294
+val_loss: 0.14083061626149437
+SAVING
+Beginning epoch 17
+loss: 0.13438954621105265
+val_loss: 0.13123696474200588
+SAVING
+Beginning epoch 18
+loss: 0.13057867196717657
+val_loss: 0.13130347897945824
+SAVING
+Beginning epoch 19
+loss: 0.13025199923300204
+val_loss: 0.13401793379147173
+SAVING
+Beginning epoch 20
+loss: 0.1319175679544757
+val_loss: 0.13841292805085748
+SAVING
+Beginning epoch 21
+loss: 0.1336662788924418
+val_loss: 0.13219754890365115
+SAVING
+Beginning epoch 22
+loss: 0.12962800069410998
+val_loss: 0.13725751581586013
+SAVING
+Beginning epoch 23
+loss: 0.13201801910212166
+val_loss: 0.13285264480164496
+SAVING
+Beginning epoch 24
+loss: 0.13142487341748144
+val_loss: 0.13102790391293623
+SAVING
+Beginning epoch 25
+loss: 0.13317820502627165
+val_loss: 0.13952175003744788
+SAVING
+Beginning epoch 26
+loss: 0.1365444715421899
+val_loss: 0.128545306496701
+SAVING
+Beginning epoch 27
+loss: 0.1289292391977812
+val_loss: 0.13027309525316044
+SAVING
+Beginning epoch 28
+loss: 0.13440255938391937
+val_loss: 0.13004843732815677
+SAVING
+Beginning epoch 29
+loss: 0.13409586520795536
+val_loss: 0.13057157125765995
+SAVING
+Beginning epoch 30
+loss: 0.13116184283692137
+val_loss: 0.13070837679808422
+SAVING
+Beginning epoch 31
+loss: 0.1303689354456457
+val_loss: 0.12932503431782885
+SAVING
+Beginning epoch 32
+loss: 0.13041774656315494
+val_loss: 0.12984824212173285
+SAVING
+Beginning epoch 33
+loss: 0.13120873521145124
+val_loss: 0.13771222765415403
+SAVING
+Beginning epoch 34
+loss: 0.13028674877451774
+val_loss: 0.12938577845945196
+SAVING
+Beginning epoch 35
+loss: 0.13084286363949452
+val_loss: 0.13976593864923817
+SAVING
+Beginning epoch 36
+loss: 0.13387960438665591
+val_loss: 0.12815613956269573
+SAVING
+Beginning epoch 37
+loss: 0.1314184642936054
+val_loss: 0.1292884946500851
+SAVING
+Beginning epoch 38
+loss: 0.1305566045574676
+val_loss: 0.12992308825507
+SAVING
+Beginning epoch 39
+loss: 0.1313927875201505
+val_loss: 0.13906837393671778
+SAVING
+Beginning epoch 40
+loss: 0.1291114074507154
+val_loss: 0.13691978093426108
+SAVING
+Beginning epoch 41
+loss: 0.1317001453915933
+val_loss: 0.13547440239433514
+SAVING
+Beginning epoch 42
+loss: 0.13156955849407312
+val_loss: 0.13922629536966147
+SAVING
+Beginning epoch 43
+loss: 0.13028886528839742
+val_loss: 0.12930810729325828
+Epoch 00044: reducing learning rate of group 0 to 4.0000e-05.
+SAVING
+Beginning epoch 44
+loss: 0.1328404859044498
+val_loss: 0.13722473742850758
+SAVING
+Beginning epoch 45
+loss: 0.13202116495572536
+val_loss: 0.13026739347536684
+SAVING
+Beginning epoch 46
+loss: 0.12815275276289848
+val_loss: 0.12799357641804016
+SAVING
+Beginning epoch 47
+loss: 0.13045087770411842
+val_loss: 0.12851493155299606
+SAVING
+Beginning epoch 48
+loss: 0.12942662585274617
+val_loss: 0.1289850835199073
+SAVING
+Beginning epoch 49
+loss: 0.13042122000702341
+val_loss: 0.13781773722020246
+SAVING
+Beginning epoch 50
+loss: 0.12845626377073446
+val_loss: 0.13053681445702658
+SAVING
+Beginning epoch 51
+loss: 0.12825473082020766
+val_loss: 0.12946763476830417
+SAVING
+Beginning epoch 52
+loss: 0.12977685483550666
+val_loss: 0.12809062004089355
+SAVING
+Beginning epoch 53
+loss: 0.12798983897257568
+val_loss: 0.1284506632867506
+SAVING
+Beginning epoch 54
+loss: 0.1310787160705803
+val_loss: 0.12855774328365163
+SAVING
+Beginning epoch 55
+loss: 0.1283014312274474
+val_loss: 0.1270799905819408
+SAVING
+Beginning epoch 56
+loss: 0.13128709099570612
+val_loss: 0.12963664241261402
+SAVING
+Beginning epoch 57
+loss: 0.13199521821916552
+val_loss: 0.12967596493535122
+SAVING
+Beginning epoch 58
+loss: 0.12945436796075419
+val_loss: 0.13011010559433597
+SAVING
+Beginning epoch 59
+loss: 0.12801964349092398
+val_loss: 0.12981707059730918
+SAVING
+Beginning epoch 60
+loss: 0.13065683102249204
+val_loss: 0.12914268647210073
+SAVING
+Beginning epoch 61
+loss: 0.13153896569309378
+val_loss: 0.13539747944322683
+SAVING
+Beginning epoch 62
+loss: 0.12974465052436168
+val_loss: 0.1279049393862991
+SAVING
+Beginning epoch 63
+loss: 0.13062217243407903
+val_loss: 0.1286926693835501
+SAVING
+Beginning epoch 64
+loss: 0.12997583668482932
+val_loss: 0.12984552404890626
+SAVING
+Beginning epoch 65
+loss: 0.12821863183849735
+val_loss: 0.13791538282471189
+SAVING
+Beginning epoch 66
+loss: 0.13003058976920923
+val_loss: 0.13023839960411443
+SAVING
+Beginning epoch 67
+loss: 0.1299279638699123
+val_loss: 0.12900438279671184
+SAVING
+Beginning epoch 68
+loss: 0.13105477835226775
+val_loss: 0.12947507253137686
+SAVING
+Beginning epoch 69
+loss: 0.12909065769579178
+val_loss: 0.12943423874044824
+Epoch 00070: reducing learning rate of group 0 to 4.0000e-06.
+SAVING
+Beginning epoch 70
+loss: 0.13104123050781122
+val_loss: 0.12907214810029935
+SAVING
+Beginning epoch 71
+loss: 0.1308260813243407
+val_loss: 0.13013618281584674
+SAVING
+Beginning epoch 72
+loss: 0.1279064098134973
+val_loss: 0.12966134594911236
+SAVING
+Beginning epoch 73
+loss: 0.13217999619200713
+val_loss: 0.13090826867748115
+SAVING
+Beginning epoch 74
+loss: 0.1292184442841917
+val_loss: 0.1297239507785288
+SAVING
+Beginning epoch 75
+loss: 0.1297041052266171
+val_loss: 0.12971218997391604
+SAVING
+Beginning epoch 76
+loss: 0.12823914528117145
+val_loss: 0.12886920931228138
+SAVING
+Beginning epoch 77
+loss: 0.12778741345369726
+val_loss: 0.129220009260511
+SAVING
+Beginning epoch 78
+loss: 0.1310634209697408
+val_loss: 0.13057847043215218
+SAVING
+Beginning epoch 79
+loss: 0.12859412368975187
+val_loss: 0.12909452831846172
+SAVING
+Beginning epoch 80
+loss: 0.12829434086281555
+val_loss: 0.1290283497991198
+SAVING
+Beginning epoch 81
+loss: 0.13225349136313103
+val_loss: 0.13050021300629033
+SAVING
+Beginning epoch 82
+loss: 0.13064986586122584
+val_loss: 0.1286084132300595
+SAVING
+Beginning epoch 83
+loss: 0.13190879611144388
+val_loss: 0.12910786447888714
+SAVING
+Beginning epoch 84
+loss: 0.12828753991682726
+val_loss: 0.13689113395699
+SAVING
+Beginning epoch 85
+loss: 0.13080724781393108
+val_loss: 0.12831389739856883
+SAVING
+Beginning epoch 86
+loss: 0.12973098453498424
+val_loss: 0.13726418200185744
+SAVING
+Beginning epoch 87
+loss: 0.12925391300280292
+val_loss: 0.12718205823231551
+SAVING
+Beginning epoch 88
+loss: 0.13378534374156392
+val_loss: 0.1292287033619517
+SAVING
+Beginning epoch 89
+loss: 0.12840407929922404
+val_loss: 0.12851152512229094
+SAVING
+Beginning epoch 90
+loss: 0.12850489238823268
+val_loss: 0.12993473843750308
+SAVING
+Beginning epoch 91
+loss: 0.12918256387898797
+val_loss: 0.13544815987095996
+SAVING
+Beginning epoch 92
+loss: 0.1322558120565307
+val_loss: 0.12949652357374208
+SAVING
+Beginning epoch 93
+loss: 0.12973107356662142
+val_loss: 0.1296165616456735
+Epoch 00094: reducing learning rate of group 0 to 4.0000e-07.
+SAVING
+Beginning epoch 94
+loss: 0.12960934481002334
+val_loss: 0.13572895350092548
+SAVING
+Beginning epoch 95
+loss: 0.12854246204732953
+val_loss: 0.12916580947526432
+SAVING
+Beginning epoch 96
+loss: 0.1321095740100495
+val_loss: 0.12878792486706023
+SAVING
+Beginning epoch 97
+loss: 0.13309586482836788
+val_loss: 0.12859875790901104
+SAVING
+Beginning epoch 98
+loss: 0.1298951870404688
+val_loss: 0.12819865219673868
+SAVING
+Beginning epoch 99
+loss: 0.1292121388522306
+val_loss: 0.1284090593709784
+SAVING
+Beginning epoch 100
+loss: 0.13077056251074137
+val_loss: 0.13388853008716795
+SAVING
+Beginning epoch 101
+loss: 0.12758234633987112
+val_loss: 0.1281175606457864
+SAVING
+Beginning epoch 102
+loss: 0.12998675792513037
+val_loss: 0.12959499063633256
+SAVING
+Beginning epoch 103
+loss: 0.12919424213188932
+val_loss: 0.13026136374574596
+SAVING
+Beginning epoch 104
+loss: 0.13252348329563787
+val_loss: 0.12823115529145224
+SAVING
+Beginning epoch 105
+loss: 0.13245174789563158
+val_loss: 0.12938146204766582
+SAVING
+Beginning epoch 106
+loss: 0.12927871064135904
+val_loss: 0.12884420175421035
+SAVING
+Beginning epoch 107
+loss: 0.12774702017020462
+val_loss: 0.1368171223518202
+SAVING
+Beginning epoch 108
+loss: 0.13015043675003196
+val_loss: 0.12894431949924615
+SAVING
+Beginning epoch 109
+loss: 0.13042619314632917
+val_loss: 0.1292203169758037
+SAVING
+Beginning epoch 110
+loss: 0.1327090679254747
+val_loss: 0.13692774484723302
+SAVING
+Beginning epoch 111
+loss: 0.13252415937140472
+val_loss: 0.13054406920732078
+SAVING
+Beginning epoch 112
+loss: 0.12956059480968274
+val_loss: 0.12833955858723592
+SAVING
+Beginning epoch 113
+loss: 0.13097736165487678
+val_loss: 0.1374704449484914
+SAVING
+Beginning epoch 114
+loss: 0.13209109846362493
+val_loss: 0.12990106957948813
+SAVING
+Beginning epoch 115
+loss: 0.13094160776389271
+val_loss: 0.13697235021045653
+SAVING
+Beginning epoch 116
+loss: 0.13610691006358405
+val_loss: 0.1361024428979825
+SAVING
+Beginning epoch 117
+loss: 0.12953602459869887
+val_loss: 0.1298187349812459
+Epoch 00118: reducing learning rate of group 0 to 4.0000e-08.
+SAVING
+Beginning epoch 118
+loss: 0.12931680402585438
+val_loss: 0.12938100238472727
+SAVING
+Beginning epoch 119
+loss: 0.12950017264014796
+val_loss: 0.13029246916205195
+SAVING
+Beginning epoch 120
+loss: 0.12793040520938714
+val_loss: 0.12793360877845247
+SAVING
+Beginning epoch 121
+loss: 0.12912191068543527
+val_loss: 0.12905818394432633
+SAVING
+Beginning epoch 122
+loss: 0.12979156529544889
+val_loss: 0.14470228439165375
+SAVING
+Beginning epoch 123
+loss: 0.1297587911661406
+val_loss: 0.12826677651728613
+SAVING
+Beginning epoch 124
+loss: 0.12928573409641594
+val_loss: 0.12926297742178885
+SAVING
+Beginning epoch 125
+loss: 0.13055711937578102
+val_loss: 0.13696880714368012
+SAVING
+Beginning epoch 126
+loss: 0.1346790727704091
+val_loss: 0.13634058672113944
+SAVING
+Beginning epoch 127
+loss: 0.13031123707393058
+val_loss: 0.12916746085225525
+SAVING
+Beginning epoch 128
+loss: 0.1303363927100834
+val_loss: 0.1288470502753379
+SAVING
+Beginning epoch 129
+loss: 0.13083997135771844
+val_loss: 0.12774829812726732
+SAVING
+Beginning epoch 130
+loss: 0.12918213900542797
+val_loss: 0.12945776685314664
+SAVING
+Beginning epoch 131
+loss: 0.12928983649813142
+val_loss: 0.1282941623890804
+SAVING
+Beginning epoch 132
+loss: 0.13458762098299829
+val_loss: 0.1306067831435446
+SAVING
+Beginning epoch 133
+loss: 0.13287082711108644
+val_loss: 0.13009999079977053
+Epoch 00134: reducing learning rate of group 0 to 4.0000e-09.
+SAVING
+Beginning epoch 134
+loss: 0.1296634188832197
+val_loss: 0.1366960408197621
+SAVING
+Beginning epoch 135
+loss: 0.1295721186507017
+val_loss: 0.13124523204514535
+SAVING
+Beginning epoch 136
+loss: 0.13779580667054742
+val_loss: 0.12980538865519783
+SAVING
+Beginning epoch 137
+loss: 0.1334108284541539
+val_loss: 0.14464969737297398
+SAVING
+Beginning epoch 138
+loss: 0.12954048597274867
+val_loss: 0.1379892018513154
+SAVING
+Beginning epoch 139
+loss: 0.13276749352427353
+val_loss: 0.13768385022373522
+SAVING
+Beginning epoch 140
+loss: 0.12979807555675507
+val_loss: 0.12975526689472844
+SAVING
+Beginning epoch 141
+loss: 0.13185906757537583
+val_loss: 0.1442488801302546
+SAVING
+Beginning epoch 142
+loss: 0.13061527920172628
+val_loss: 0.1365900466502723
+SAVING
+Beginning epoch 143
+loss: 0.13168414740410067
+val_loss: 0.129210044771938
+SAVING
+Beginning epoch 144
+loss: 0.13108034465545998
+val_loss: 0.12889764123296332
+SAVING
+Beginning epoch 145
+loss: 0.13279839067306734
+val_loss: 0.1294560955237534
+SAVING
+Beginning epoch 146
+loss: 0.13074557449584617
+val_loss: 0.12937281558574257
+SAVING
+Beginning epoch 147
+loss: 0.1285394149279236
+val_loss: 0.13684424107610169
+SAVING
+Beginning epoch 148
+loss: 0.13376134171297677
+val_loss: 0.1371195553723028
+SAVING
+Beginning epoch 149
+loss: 0.1286599389928624
+val_loss: 0.12890806137505223
+SAVING
+Beginning epoch 150
+loss: 0.13242107368725584
+val_loss: 0.13716569347149235
+SAVING
+Beginning epoch 151
+loss: 0.1284147014855442
+val_loss: 0.12998964599633622
+SAVING
+Beginning epoch 152
+loss: 0.130545247234124
+val_loss: 0.1307564036194551
+SAVING
+Beginning epoch 153
+loss: 0.12997824091436272
+val_loss: 0.1297687269368414
+SAVING
+Beginning epoch 154
+loss: 0.13092158563379058
+val_loss: 0.1288334076308598
+SAVING
+Beginning epoch 155
+loss: 0.12942285306919787
+val_loss: 0.12846240710656523
+SAVING
+Beginning epoch 156
+loss: 0.13156113683953322
+val_loss: 0.12986203977617167
+SAVING
+Beginning epoch 157
+loss: 0.12981885310850647
+val_loss: 0.1287417686465433
+SAVING
+Beginning epoch 158
+loss: 0.1313134491331595
+val_loss: 0.1306115606705011
+SAVING
+Beginning epoch 159
+loss: 0.12980923738918806
+val_loss: 0.12848555220890853
+SAVING
+Beginning epoch 160
+loss: 0.131889167394405
+val_loss: 0.12839000823639207
+SAVING
+Beginning epoch 161
+loss: 0.12987585521506187
+val_loss: 0.12965645552691768
+SAVING
+Beginning epoch 162
+loss: 0.13238732255715177
+val_loss: 0.14357299509189897
+SAVING
+Beginning epoch 163
+loss: 0.1294354558159086
+val_loss: 0.1290071096460698
+SAVING
+Beginning epoch 164
+loss: 0.1311348276366865
+val_loss: 0.13698025369795702
+SAVING
+Beginning epoch 165
+loss: 0.12925495431387335
+val_loss: 0.1288860089192956
+SAVING
+Beginning epoch 166
+loss: 0.13002763363651762
+val_loss: 0.1372319776249134
+SAVING
+Beginning epoch 167
+loss: 0.12920907189075212
+val_loss: 0.14343460415632037
+SAVING
+Beginning epoch 168
+loss: 0.12858592119432033
+val_loss: 0.13111792473217188
+SAVING
+Beginning epoch 169
+loss: 0.129230543847819
+val_loss: 0.1310610876623857
+SAVING
+Beginning epoch 170
+loss: 0.13401768040612227
+val_loss: 0.1289634551789801
+SAVING
+Beginning epoch 171
+loss: 0.13233467863690584
+val_loss: 0.13053355574355288
+SAVING
+Beginning epoch 172
+loss: 0.127815328896942
+val_loss: 0.12838450124708273
+SAVING
+Beginning epoch 173
+loss: 0.12833660150829115
+val_loss: 0.13094831700042142
+SAVING
+Beginning epoch 174
+loss: 0.12939560625113938
+val_loss: 0.13551028186486938
+SAVING
+Beginning epoch 175
+loss: 0.1306322883730544
+val_loss: 0.12943276415689517
+SAVING
+Beginning epoch 176
+loss: 0.12962369413528227
+val_loss: 0.12865582051671157
+SAVING
+Beginning epoch 177
+loss: 0.1296181322936725
+val_loss: 0.12776158308073626
+SAVING
+Beginning epoch 178
+loss: 0.12898067423051462
+val_loss: 0.13563983937946417
+SAVING
+Beginning epoch 179
+loss: 0.1301162599284846
+val_loss: 0.12829379869972246
+SAVING
+Beginning epoch 180
+loss: 0.12845879602701143
+val_loss: 0.13720680672233387
+SAVING
+Beginning epoch 181
+loss: 0.13020298524682683
+val_loss: 0.12814685803348735
+SAVING
+Beginning epoch 182
+loss: 0.1292709718745454
+val_loss: 0.12849718408059266
+SAVING
+Beginning epoch 183
+loss: 0.1304049901944354
+val_loss: 0.1292920670140598
+SAVING
+Beginning epoch 184
+loss: 0.13053786241470422
+val_loss: 0.12788983743827223
+SAVING
+Beginning epoch 185
+loss: 0.13175880981791288
+val_loss: 0.12922505920721314
+SAVING
+Beginning epoch 186
+loss: 0.13059062360596835
+val_loss: 0.1284792073449846
+SAVING
+Beginning epoch 187
+loss: 0.1307390215477549
+val_loss: 0.1292180196082188
+SAVING
+Beginning epoch 188
+loss: 0.13193577912292984
+val_loss: 0.13558547179830277
+SAVING
+Beginning epoch 189
+loss: 0.1293114418037852
+val_loss: 0.12879411699408191
+SAVING
+Beginning epoch 190
+loss: 0.1319104605263337
+val_loss: 0.1305800539962316
+SAVING
+Beginning epoch 191
+loss: 0.13226065213855048
+val_loss: 0.13624162151146743
+SAVING
+Beginning epoch 192
+loss: 0.12845452180258313
+val_loss: 0.12905064395676225
+SAVING
+Beginning epoch 193
+loss: 0.12936398954992007
+val_loss: 0.12894557555348185
+SAVING
+Beginning epoch 194
+loss: 0.13339781766771375
+val_loss: 0.13152108499306744
+SAVING
+Beginning epoch 195
+loss: 0.1309021744400935
+val_loss: 0.12929018119634209
+SAVING
+Beginning epoch 196
+loss: 0.1295919857751158
+val_loss: 0.1370038414153002
+SAVING
+Beginning epoch 197
+loss: 0.13338643120867866
+val_loss: 0.13049762866507142
+SAVING
+Beginning epoch 198
+loss: 0.13046173883560008
+val_loss: 0.12927058509598344
+SAVING
+Beginning epoch 199
+loss: 0.13124266124533532
+val_loss: 0.1286402739963289
+SAVING
+Beginning epoch 200
+loss: 0.13099324742430135
+val_loss: 0.14276424965868562
+SAVING
+Beginning epoch 201
+loss: 0.1290339801992689
+val_loss: 0.1372620389496876
+SAVING
+Beginning epoch 202
+loss: 0.13150774977709118
+val_loss: 0.12900561504697394
+SAVING
+Beginning epoch 203
+loss: 0.130036802152942
+val_loss: 0.1280115358531475
+SAVING
+Beginning epoch 204
+loss: 0.12795361747643105
+val_loss: 0.13818424801200124
+SAVING
+Beginning epoch 205
+loss: 0.132964810897085
+val_loss: 0.12955369017386842
+SAVING
+Beginning epoch 206
+loss: 0.12940474623127987
+val_loss: 0.12909969744288316
+SAVING
+Beginning epoch 207
+loss: 0.12850588124273415
+val_loss: 0.12950539266911604
+SAVING
+Beginning epoch 208
+loss: 0.12846465318050598
+val_loss: 0.12958379033005843
+SAVING
+Beginning epoch 209
+loss: 0.127835558690971
+val_loss: 0.13807048124529547
+SAVING
+Beginning epoch 210
+loss: 0.1296315580270344
+val_loss: 0.12938284147846496
+SAVING
+Beginning epoch 211
+loss: 0.1328667254376232
+val_loss: 0.12898859760518802
+SAVING
+Beginning epoch 212
+loss: 0.13112292099267917
+val_loss: 0.1285369631092427
+SAVING
+Beginning epoch 213
+loss: 0.13098223037961731
+val_loss: 0.12933684576113344
+SAVING
+Beginning epoch 214
+loss: 0.1297091630952699
+val_loss: 0.12934339122246888
+SAVING
+Beginning epoch 215
+loss: 0.13287586008471655
+val_loss: 0.13654448578165748
+SAVING
+Beginning epoch 216
+loss: 0.12966422616763223
+val_loss: 0.12917440731899213
+SAVING
+Beginning epoch 217
+loss: 0.1344251080451155
+val_loss: 0.1304265129364143
+SAVING
+Beginning epoch 218

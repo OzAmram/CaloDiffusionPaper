@@ -1,4 +1,5 @@
 #some pytorch modules & useful functions
+from queue import PriorityQueue
 from einops import rearrange
 import copy
 import math
@@ -71,7 +72,11 @@ class CylindricalConv(nn.Module):
             padding[1] = 0
         self.kernel_size = kernel_size
         self.conv = nn.Conv3d(dim_in, dim_out, kernel_size=kernel_size, stride = stride, groups = groups, padding = padding, bias = bias)
-
+        print("Conv3d dim_in:")
+        print(dim_in)
+        print("Conv3d dim_out:")
+        print(dim_out)
+        
     def forward(self, x):
         #to achieve 'same' use padding P = ((S-1)*W-S+F)/2, with F = filter size, S = stride, W = input size
         #pad last dim with nothing, 2nd to last dim is circular one
@@ -112,10 +117,18 @@ class SinusoidalPositionEmbeddings(nn.Module):
 
 class Block(nn.Module):
     def __init__(self, dim, dim_out, groups = 8, cylindrical = False):
+        print("block dim size:")
+        print(dim)
+        print("block dim_out size:")
+        print(dim_out)
         super().__init__()
         if(not cylindrical): 
             self.proj = nn.Conv3d(dim, dim_out, kernel_size = 3, padding = 1)
         else:  self.proj = CylindricalConv(dim, dim_out, kernel_size = 3, padding = 1)
+        print("C conv dim size:")
+        print(dim)
+        print("C conv dim_out size:")
+        print(dim_out)
         self.norm = nn.GroupNorm(groups, dim_out)
         self.act = nn.SiLU()
 
@@ -144,6 +157,10 @@ class ResnetBlock(nn.Module):
         conv = CylindricalConv(dim, dim_out, kernel_size = 1) if cylindrical else nn.Conv3d(dim, dim_out, kernel_size = 1)
         self.block1 = Block(dim, dim_out, groups=groups, cylindrical = cylindrical)
         self.block2 = Block(dim_out, dim_out, groups=groups, cylindrical = cylindrical)
+        # print("block1 type:")
+        # print(self.block1)
+        # print('blcok2 type:')
+        # print(self.block2)
         self.res_conv = conv if dim != dim_out else nn.Identity()
 
     def forward(self, x, time_emb=None):

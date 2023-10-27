@@ -8,15 +8,15 @@ from torchinfo import summary
 from ae_models import *
 
 import sys
-sys.path.append("/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper/scripts")
-import utils
+sys.path.append("/home/kballantyne/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper/scripts")
+from utils import *
 
 
 class CaloEnco(nn.Module):
     """Autoencoder for latent diffusion"""
     def __init__(self, data_shape, config=None, R_Z_inputs = False, training_obj = 'mean_pred', nsteps = 400,
                     cold_diffu = False, E_bins = None, avg_showers = None, std_showers = None, NN_embed = None):
-        super(CaloDiffu, self).__init__()
+        super(CaloEnco, self).__init__()
         self._data_shape = data_shape
         self.nvoxels = np.prod(self._data_shape)
         self.config = config
@@ -129,11 +129,14 @@ class CaloEnco(nn.Module):
             summary_shape = [calo_summary_shape, [1], [1]]
 
 
-            self.model = CondUnet(cond_dim = cond_dim, out_dim = 1, channels = in_channels, layer_sizes = layer_sizes, block_attn = block_attn, mid_attn = mid_attn, 
+            self.model = CondAE(cond_dim = cond_dim, out_dim = 1, channels = in_channels, layer_sizes = layer_sizes, block_attn = block_attn, mid_attn = mid_attn, 
                     cylindrical =  config.get('CYLINDRICAL', False), compress_Z = compress_Z, data_shape = calo_summary_shape,
                     cond_embed = (self.E_embed == 'sin'), time_embed = (self.time_embed == 'sin') )
 
         print("\n\n Model: \n")
+        # print(type(self.model))
+        # print(type(summary_shape))
+        print(summary_shape)
         summary(self.model, summary_shape)
 
     #wrapper for backwards compatability
@@ -309,7 +312,7 @@ class CaloEnco(nn.Module):
 
             #return c_skip * x + c_out * pred
 
-    #Not sure if we need this function
+    
     #@torch.no_grad()
     #def p_sample(self, x, E, t, cold_noise_scale = 0., noise = None, sample_algo = 'ddpm', debug = False):
         #reverse the diffusion process (one step)
@@ -358,89 +361,90 @@ class CaloEnco(nn.Module):
         #     exit(1)
 
 
-
-        #if(debug): 
-        #    if(x0_pred is None):
-        #        x0_pred = (x - sqrt_one_minus_alphas_cumprod_t * noise_pred)/sqrt_alphas_cumprod_t
-        #    return out, x0_pred
-        #return out
-    '''
-    def gen_cold_image(self, E, cold_noise_scale, noise = None):
-
-        avg_shower, std_shower = self.lookup_avg_std_shower(E)
-
-        if(noise is None):
-            noise = torch.randn_like(avg_shower, dtype = torch.float32)
-
-        cold_scales = cold_noise_scale
-
-        return torch.add(avg_shower, cold_scales * (noise * std_shower))
-    '''
-
-
-    '''
-    @torch.no_grad()
-    def Sample(self, E, num_steps = 200, cold_noise_scale = 0., sample_algo = 'ddpm', debug = False, sample_offset = 0, sample_step = 1):
-        """Generate samples from diffusion model.
-        
-        Args:
-        E: Energies
-        num_steps: The number of sampling steps. 
-        Equivalent to the number of discretized time steps.    
-        
-        Returns: 
-        Samples.
-        """
-
-        print("SAMPLE ALGO : %s" % sample_algo)
-
-        # Full sample (all steps)
-        device = next(self.parameters()).device
-
-
-        gen_size = E.shape[0]
-        # start from pure noise (for each example in the batch)
-        gen_shape = list(copy.copy(self._data_shape))
-        gen_shape.insert(0,gen_size)
-
-        #start from pure noise
-        x_start = torch.randn(gen_shape, device=device)
-
-        avg_shower = std_shower = None
-        if(self.cold_diffu): #cold diffu starts using avg images
-            x_start = self.gen_cold_image(E, cold_noise_scale)
-
-
-        start = time.time()
-
-
-        x = x_start
-        fixed_noise = None
-        if('fixed' in sample_algo): 
-            print("Fixing noise to constant for sampling!")
-            fixed_noise = x_start
-        xs = []
-        x0s = []
-        self.prev_noise = x_start
-
-        time_steps = list(range(0, num_steps - sample_offset, sample_step))
-        time_steps.reverse()
-
-        for time_step in time_steps:      
-            times = torch.full((gen_size,), time_step, device=device, dtype=torch.long)
-            out = self.p_sample(x, E, times, noise = fixed_noise, cold_noise_scale = cold_noise_scale, sample_algo = sample_algo, debug = debug)
-            if(debug): 
-                x, x0_pred = out
-                xs.append(x.detach().cpu().numpy())
-                x0s.append(x0_pred.detach().cpu().numpy())
-            else: x = out
-
-        end = time.time()
-        print("Time for sampling {} events is {} seconds".format(gen_size,end - start), flush=True)
-        if(debug):
-            return x.detach().cpu().numpy(), xs, x0s
-        else:   
-            return x.detach().cpu().numpy()
-    '''
     
+    #     if(debug): 
+    #         if(x0_pred is None):
+    #             x0_pred = (x - sqrt_one_minus_alphas_cumprod_t * noise_pred)/sqrt_alphas_cumprod_t
+    #         return out, x0_pred
+    #     return out
+
+    
+    # def gen_cold_image(self, E, cold_noise_scale, noise = None):
+
+    #     avg_shower, std_shower = self.lookup_avg_std_shower(E)
+
+    #     if(noise is None):
+    #         noise = torch.randn_like(avg_shower, dtype = torch.float32)
+
+    #     cold_scales = cold_noise_scale
+
+    #     return torch.add(avg_shower, cold_scales * (noise * std_shower))
+    
+
+
+    # '''
+    # @torch.no_grad()
+    # def Sample(self, E, num_steps = 200, cold_noise_scale = 0., sample_algo = 'ddpm', debug = False, sample_offset = 0, sample_step = 1):
+    #     """Generate samples from diffusion model.
         
+    #     Args:
+    #     E: Energies
+    #     num_steps: The number of sampling steps. 
+    #     Equivalent to the number of discretized time steps.    
+        
+    #     Returns: 
+    #     Samples.
+    #     """
+
+    #     print("SAMPLE ALGO : %s" % sample_algo)
+
+    #     # Full sample (all steps)
+    #     device = next(self.parameters()).device
+
+
+    #     gen_size = E.shape[0]
+    #     # start from pure noise (for each example in the batch)
+    #     gen_shape = list(copy.copy(self._data_shape))
+    #     gen_shape.insert(0,gen_size)
+
+    #     #start from pure noise
+    #     x_start = torch.randn(gen_shape, device=device)
+
+    #     avg_shower = std_shower = None
+    #     if(self.cold_diffu): #cold diffu starts using avg images
+    #         x_start = self.gen_cold_image(E, cold_noise_scale)
+
+
+    #     start = time.time()
+
+
+    #     x = x_start
+    #     fixed_noise = None
+    #     if('fixed' in sample_algo): 
+    #         print("Fixing noise to constant for sampling!")
+    #         fixed_noise = x_start
+    #     xs = []
+    #     x0s = []
+    #     self.prev_noise = x_start
+
+    #     time_steps = list(range(0, num_steps - sample_offset, sample_step))
+    #     time_steps.reverse()
+
+    #     for time_step in time_steps:      
+    #         times = torch.full((gen_size,), time_step, device=device, dtype=torch.long)
+    #         out = self.p_sample(x, E, times, noise = fixed_noise, cold_noise_scale = cold_noise_scale, sample_algo = sample_algo, debug = debug)
+    #         if(debug): 
+    #             x, x0_pred = out
+    #             xs.append(x.detach().cpu().numpy())
+    #             x0s.append(x0_pred.detach().cpu().numpy())
+    #         else: x = out
+
+    #     end = time.time()
+    #     print("Time for sampling {} events is {} seconds".format(gen_size,end - start), flush=True)
+    #     if(debug):
+    #         return x.detach().cpu().numpy(), xs, x0s
+    #     else:   
+    #         return x.detach().cpu().numpy()
+
+    
+    #     '''

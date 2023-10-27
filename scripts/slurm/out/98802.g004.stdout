@@ -1,0 +1,152 @@
+TRAIN DIFFU
+TRAINING OPTIONS
+{'FILES': ['dataset_2_1.hdf5'], 'EVAL': ['dataset_2_2.hdf5'], 'AVG_SHOWER_LOC': '/wclustre/cms_mlsim/denoise/CaloChallenge/dataset_2_avg_showers.hdf5', 'DATASET_NUM': 2, 'HOLDOUT': 0, 'SHAPE_ORIG': [-1, 6480], 'SHAPE': [-1, 45, 16, 9, 1], 'SHAPE_PAD': [-1, 1, 45, 16, 9], 'BATCH': 128, 'LR': '4e-4', 'MAXEPOCH': 1000, 'NLAYERS': 3, 'EARLYSTOP': 20, 'LAYER_SIZE_AE': [32, 64, 64, 32], 'DIM_RED_AE': [0, 2, 0, 2], 'LAYER_SIZE_UNET': [16, 16, 16, 32], 'COND_SIZE_UNET': 128, 'KERNEL': [3, 3, 3], 'STRIDE': [3, 2, 2], 'BLOCK_ATTN': True, 'MID_ATTN': True, 'COMPRESS_Z': True, 'ACT': 'swish', 'EMBED': 128, 'EMAX': 1000.0, 'EMIN': 1.0, 'ECUT': 1.51e-05, 'logE': True, 'MAXDEP': 2, 'CYLINDRICAL': True, 'SHOWERMAP': 'logit-norm', 'R_Z_INPUT': True, 'BETA_MAX': 0.02, 'NOISE_SCHED': 'cosine', 'NSTEPS': 400, 'COLD_DIFFU': False, 'COLD_NOISE': 1.0, 'TRAINING_OBJ': 'noise_pred', 'LOSS_TYPE': 'l2', 'TIME_EMBED': 'sigma', 'COND_EMBED': 'id', 'CHECKPOINT_NAME': 'dataset2'}
+Event start, stop:  0 None
+dset 2
+Data Shape (100000, 1, 45, 16, 9)
+
+
+ Model: 
+
+=========================================================================================================
+Layer (type:depth-idx)                                  Output Shape              Param #
+=========================================================================================================
+CondUnet                                                [1, 1, 45, 16, 9]         --
+├─CylindricalConv: 1-1                                  [1, 16, 45, 16, 9]        --
+│    └─Conv3d: 2-1                                      [1, 16, 45, 16, 9]        1,312
+├─Sequential: 1-2                                       [1, 64]                   --
+│    └─Unflatten: 2-2                                   [1, 1]                    --
+│    └─Linear: 2-3                                      [1, 32]                   64
+│    └─GELU: 2-4                                        [1, 32]                   --
+│    └─Linear: 2-5                                      [1, 64]                   2,112
+│    └─GELU: 2-6                                        [1, 64]                   --
+│    └─Linear: 2-7                                      [1, 64]                   4,160
+├─Sequential: 1-3                                       [1, 64]                   --
+│    └─Unflatten: 2-8                                   [1, 1]                    --
+│    └─Linear: 2-9                                      [1, 32]                   64
+│    └─GELU: 2-10                                       [1, 32]                   --
+│    └─Linear: 2-11                                     [1, 64]                   2,112
+│    └─GELU: 2-12                                       [1, 64]                   --
+│    └─Linear: 2-13                                     [1, 64]                   4,160
+├─ModuleList: 1-10                                      --                        (recursive)
+│    └─ModuleList: 2-16                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-1                            [1, 16, 45, 16, 9]        15,984
+│    │    └─ResnetBlock: 3-2                            [1, 16, 45, 16, 9]        15,984
+├─ModuleList: 1-9                                       --                        (recursive)
+│    └─Residual: 2-15                                   [1, 16, 45, 16, 9]        --
+│    │    └─PreNorm: 3-3                                [1, 16, 45, 16, 9]        2,128
+├─ModuleList: 1-10                                      --                        (recursive)
+│    └─ModuleList: 2-16                                 --                        (recursive)
+│    │    └─CylindricalConv: 3-4                        [1, 16, 23, 8, 4]         12,304
+│    └─ModuleList: 2-19                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-5                            [1, 16, 23, 8, 4]         15,984
+│    │    └─ResnetBlock: 3-6                            [1, 16, 23, 8, 4]         15,984
+├─ModuleList: 1-9                                       --                        (recursive)
+│    └─Residual: 2-18                                   [1, 16, 23, 8, 4]         --
+│    │    └─PreNorm: 3-7                                [1, 16, 23, 8, 4]         2,128
+├─ModuleList: 1-10                                      --                        (recursive)
+│    └─ModuleList: 2-19                                 --                        (recursive)
+│    │    └─CylindricalConv: 3-8                        [1, 16, 12, 4, 2]         12,304
+│    └─ModuleList: 2-22                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-9                            [1, 32, 12, 4, 2]         46,336
+│    │    └─ResnetBlock: 3-10                           [1, 32, 12, 4, 2]         59,616
+├─ModuleList: 1-9                                       --                        (recursive)
+│    └─Residual: 2-21                                   [1, 32, 12, 4, 2]         --
+│    │    └─PreNorm: 3-11                               [1, 32, 12, 4, 2]         4,256
+├─ModuleList: 1-10                                      --                        (recursive)
+│    └─ModuleList: 2-22                                 --                        (recursive)
+│    │    └─Identity: 3-12                              [1, 32, 12, 4, 2]         --
+├─ResnetBlock: 1-11                                     [1, 32, 12, 4, 2]         --
+│    └─Block: 2-23                                      [1, 32, 12, 4, 2]         --
+│    │    └─CylindricalConv: 3-13                       [1, 32, 12, 4, 2]         27,680
+│    │    └─GroupNorm: 3-14                             [1, 32, 12, 4, 2]         64
+│    │    └─SiLU: 3-15                                  [1, 32, 12, 4, 2]         --
+│    └─Sequential: 2-24                                 [1, 32]                   --
+│    │    └─SiLU: 3-16                                  [1, 128]                  --
+│    │    └─Linear: 3-17                                [1, 32]                   4,128
+│    └─Block: 2-25                                      [1, 32, 12, 4, 2]         --
+│    │    └─CylindricalConv: 3-18                       [1, 32, 12, 4, 2]         27,680
+│    │    └─GroupNorm: 3-19                             [1, 32, 12, 4, 2]         64
+│    │    └─SiLU: 3-20                                  [1, 32, 12, 4, 2]         --
+│    └─Identity: 2-26                                   [1, 32, 12, 4, 2]         --
+├─Residual: 1-12                                        [1, 32, 12, 4, 2]         --
+│    └─PreNorm: 2-27                                    [1, 32, 12, 4, 2]         --
+│    │    └─GroupNorm: 3-21                             [1, 32, 12, 4, 2]         64
+│    │    └─LinearAttention: 3-22                       [1, 32, 12, 4, 2]         4,192
+├─ResnetBlock: 1-13                                     [1, 32, 12, 4, 2]         --
+│    └─Block: 2-28                                      [1, 32, 12, 4, 2]         --
+│    │    └─CylindricalConv: 3-23                       [1, 32, 12, 4, 2]         27,680
+│    │    └─GroupNorm: 3-24                             [1, 32, 12, 4, 2]         64
+│    │    └─SiLU: 3-25                                  [1, 32, 12, 4, 2]         --
+│    └─Sequential: 2-29                                 [1, 32]                   --
+│    │    └─SiLU: 3-26                                  [1, 128]                  --
+│    │    └─Linear: 3-27                                [1, 32]                   4,128
+│    └─Block: 2-30                                      [1, 32, 12, 4, 2]         --
+│    │    └─CylindricalConv: 3-28                       [1, 32, 12, 4, 2]         27,680
+│    │    └─GroupNorm: 3-29                             [1, 32, 12, 4, 2]         64
+│    │    └─SiLU: 3-30                                  [1, 32, 12, 4, 2]         --
+│    └─Identity: 2-31                                   [1, 32, 12, 4, 2]         --
+├─ModuleList: 1-20                                      --                        (recursive)
+│    └─ModuleList: 2-34                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-31                           [1, 16, 12, 4, 2]         37,760
+│    │    └─ResnetBlock: 3-32                           [1, 16, 12, 4, 2]         15,984
+├─ModuleList: 1-19                                      --                        (recursive)
+│    └─Residual: 2-33                                   [1, 16, 12, 4, 2]         --
+│    │    └─PreNorm: 3-33                               [1, 16, 12, 4, 2]         2,128
+├─ModuleList: 1-20                                      --                        (recursive)
+│    └─ModuleList: 2-34                                 --                        (recursive)
+│    │    └─CylindricalConvTrans: 3-34                  [1, 16, 23, 8, 4]         12,304
+│    └─ModuleList: 2-37                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-35                           [1, 16, 23, 8, 4]         23,424
+│    │    └─ResnetBlock: 3-36                           [1, 16, 23, 8, 4]         15,984
+├─ModuleList: 1-19                                      --                        (recursive)
+│    └─Residual: 2-36                                   [1, 16, 23, 8, 4]         --
+│    │    └─PreNorm: 3-37                               [1, 16, 23, 8, 4]         2,128
+├─ModuleList: 1-20                                      --                        (recursive)
+│    └─ModuleList: 2-37                                 --                        (recursive)
+│    │    └─CylindricalConvTrans: 3-38                  [1, 16, 45, 16, 9]        12,304
+│    └─ModuleList: 2-40                                 --                        (recursive)
+│    │    └─ResnetBlock: 3-39                           [1, 16, 45, 16, 9]        23,424
+│    │    └─ResnetBlock: 3-40                           [1, 16, 45, 16, 9]        15,984
+├─ModuleList: 1-19                                      --                        (recursive)
+│    └─Residual: 2-39                                   [1, 16, 45, 16, 9]        --
+│    │    └─PreNorm: 3-41                               [1, 16, 45, 16, 9]        2,128
+├─ModuleList: 1-20                                      --                        (recursive)
+│    └─ModuleList: 2-40                                 --                        (recursive)
+│    │    └─Identity: 3-42                              [1, 16, 45, 16, 9]        --
+├─Sequential: 1-21                                      [1, 1, 45, 16, 9]         --
+│    └─ResnetBlock: 2-41                                [1, 16, 45, 16, 9]        --
+│    │    └─Block: 3-43                                 [1, 16, 45, 16, 9]        6,960
+│    │    └─Block: 3-44                                 [1, 16, 45, 16, 9]        6,960
+│    │    └─Identity: 3-45                              [1, 16, 45, 16, 9]        --
+│    └─CylindricalConv: 2-42                            [1, 1, 45, 16, 9]         --
+│    │    └─Conv3d: 3-46                                [1, 1, 45, 16, 9]         17
+=========================================================================================================
+Total params: 517,969
+Trainable params: 517,969
+Non-trainable params: 0
+Total mult-adds (Units.MEGABYTES): 706.61
+=========================================================================================================
+Input size (MB): 0.08
+Forward/backward pass size (MB): 38.50
+Params size (MB): 2.07
+Estimated Total Size (MB): 40.65
+=========================================================================================================
+{'patience': 20, 'min_delta': 1e-05, 'counter': 0, 'min_validation_loss': inf, 'mode': 'diff'}
+Beginning epoch 0
+loss: 0.241628403255814
+val_loss: 0.16187483899421612
+SAVING
+Beginning epoch 1
+loss: 0.14995643959233634
+val_loss: 0.15159111217422
+SAVING
+Beginning epoch 2
+loss: 0.1428377257029813
+val_loss: 0.1466402623613002
+SAVING
+Beginning epoch 3
+loss: 0.14112193140768467
+val_loss: 0.14607854282199326
+SAVING
+Beginning epoch 4
