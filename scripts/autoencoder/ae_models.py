@@ -479,7 +479,7 @@ class CondAE(nn.Module):
 
         t = self.time_mlp(time)
         c = self.cond_mlp(cond)
-        #conditions = torch.cat([t,c], axis = -1)
+        #conditions = torch.cat([t,c], axis = -1) # DOUG REMOVED DIFFUSION TIME STEP FROM CONDITIONAL INPUT
         conditions = c
 
         # h = []
@@ -499,7 +499,7 @@ class CondAE(nn.Module):
 
         # upsample
         for i, (block1, block2, upsample) in enumerate(self.ups):
-            # x = torch.cat((x, h.pop()), dim=1) # skip connection?????
+            # x = torch.cat((x, h.pop()), dim=1) # DOUG REMOVED SKIP CONNECTIONS
             x = block1(x, conditions)
             x = block2(x, conditions)
             if(self.block_attn): x = self.ups_attn[i](x)

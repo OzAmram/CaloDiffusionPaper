@@ -6,12 +6,21 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torchinfo import summary
 from ae_models import *
-
 import sys
-sys.path.append("/home/kballantyne/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper/scripts")
 
-from utils import *
+def trim_file_path(cwd:str, num_back:int):
+    '''
+    '''
+    split_path = cwd.split("/")
+    trimmed_split_path = split_path[:-num_back]
+    trimmed_path = "/".join(trimmed_split_path)
 
+    return trimmed_path
+
+cwd = __file__
+scripts_dir = trim_file_path(cwd=cwd, num_back=3)
+sys.path.append(scripts_dir)
+from scripts.utils import *
 
 class CaloEnco(nn.Module):
     """Autoencoder for latent diffusion"""

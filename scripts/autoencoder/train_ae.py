@@ -3,18 +3,23 @@ import os
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 import argparse
 import h5py as h5
+import torch
 import torch.optim as optim
 import torch.utils.data as torchdata
+import sys
+import os
 
 from ae_models import *
 from CaloEnco import *
 
-import sys
-sys.path.append("/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper/scripts")
-from utils import *
+def trim_file_path(cwd:str, num_back:int):
+    '''
+    '''
+    split_path = cwd.split("/")
+    trimmed_split_path = split_path[:-num_back]
+    trimmed_path = "/".join(trimmed_split_path)
 
-sys.path.append("/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper")
-from CaloChallenge.code.XMLHandler import *
+    return trimmed_path
 
 if __name__ == '__main__':
     print("TRAIN AUTOENCODER")
@@ -35,6 +40,13 @@ if __name__ == '__main__':
     parser.add_argument('--reset_training', action='store_true', default=False,help='Retrain')
     parser.add_argument('--binning_file', type=str, default=None)
     flags = parser.parse_args()
+
+    cwd = __file__
+    calo_challenge_dir = trim_file_path(cwd=cwd, num_back=3)
+    sys.path.append(calo_challenge_dir)
+    print(calo_challenge_dir)
+    from scripts.utils import *
+    from CaloChallenge.code.XMLHandler import *
 
     dataset_config = LoadJson(flags.config)
 
@@ -216,7 +228,7 @@ if __name__ == '__main__':
             batch_loss = model.compute_loss(vdata, vE, t=t, loss_type='mse', energy_loss_scale=energy_loss_scale) # COMPUTE OUR OWN MSE LOSS, DELETED WHAT WAS HERE PRIOR
 
             val_loss+=batch_loss.item()
-            del vdata,vE, batch_loss # DOUG REMOVED NOISE FROM OUTPUTS
+            del vdata, vE, batch_loss # DOUG REMOVED NOISE FROM OUTPUTS
 
         val_loss = val_loss/len(loader_val)
         #scheduler.step(torch.tensor([val_loss]))
