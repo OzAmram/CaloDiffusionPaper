@@ -10,7 +10,7 @@ from ae_models import *
 from CaloEnco import *
 
 import sys
-sys.path.append("..")
+sys.path.append("/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper/scripts")
 from utils import *
 
 sys.path.append("/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper")

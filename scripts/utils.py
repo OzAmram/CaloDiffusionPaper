@@ -10,7 +10,7 @@ import torch.nn as nn
 import sys
 import joblib
 from sklearn.preprocessing import QuantileTransformer
-sys.path.append("..")
+sys.path.append("/home/kballantyne/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper")
 from CaloChallenge.code.XMLHandler import *
 from consts import *
 

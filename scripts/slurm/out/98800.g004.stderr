@@ -1,0 +1,8 @@
+/var/spool/slurmd/job98800/slurm_script: line 13: ​: command not found
+usage: train_diffu.py [-h] [--data_folder DATA_FOLDER] [--model MODEL]
+                      [-c CONFIG] [--nevts NEVTS] [--frac FRAC] [--load]
+                      [--seed SEED] [--reset_training]
+                      [--binning_file BINNING_FILE]
+train_diffu.py: error: unrecognized arguments:  
+/var/spool/slurmd/job98800/slurm_script: line 18: --config: command not found
+/var/spool/slurmd/job98800/slurm_script: line 19: --data_folder: command not found
