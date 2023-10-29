@@ -129,16 +129,13 @@ class CaloEnco(nn.Module):
             calo_summary_shape[0] = 1
             summary_shape = [calo_summary_shape, [1], [1]]
 
-
             self.model = CondAE(cond_dim = cond_dim, out_dim = 1, channels = in_channels, layer_sizes = layer_sizes, block_attn = block_attn, mid_attn = mid_attn, 
-                    cylindrical =  config.get('CYLINDRICAL', False), compress_Z = compress_Z, data_shape = calo_summary_shape,
-                    cond_embed = (self.E_embed == 'sin'), time_embed = (self.time_embed == 'sin') )
+                    cylindrical=config.get('CYLINDRICAL', False), compress_Z = compress_Z, data_shape = calo_summary_shape,
+                    cond_embed = (self.E_embed == 'sin'), time_embed = False ) # DOUG REMOVED TIME EMBEDDING to match sizes
 
-        print("\n\n Model: \n")
-        # print(type(self.model))
-        # print(type(summary_shape))
-        print(summary_shape)
-        summary(self.model, summary_shape)
+        #print("\n\n Model: \n")
+        #summary(self.model, summary_shape)
+
 
     #wrapper for backwards compatability
     def load_state_dict(self, d):
