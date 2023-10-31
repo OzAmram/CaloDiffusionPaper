@@ -7,11 +7,25 @@ import h5py as h5
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 import time, sys, copy
-import utils
 import torch
 import torch.utils.data as torchdata
 from CaloEnco import *
 # import h5py
+
+def trim_file_path(cwd:str, num_back:int):
+    '''
+    '''
+    split_path = cwd.split("/")
+    trimmed_split_path = split_path[:-num_back]
+    trimmed_path = "/".join(trimmed_split_path)
+
+    return trimmed_path
+
+cwd = __file__
+calo_challenge_dir = trim_file_path(cwd=cwd, num_back=3)
+sys.path.append(calo_challenge_dir)
+print(calo_challenge_dir)
+import scripts.utils as utils
 
 if(torch.cuda.is_available()): device = torch.device('cuda')
 else: device = torch.device('cpu')
@@ -146,19 +160,19 @@ if flags.sample:
 
     if(flags.model == "AE"): # DOUG MODIFY THIS IF BLOCK FOR OUR AE
         print("Loading AE from " + flags.model_loc)
-        model = CaloAE(dataset_config['SHAPE_PAD'][1:], batch_size, config=dataset_config).to(device=device)
+        model = CaloEnco(dataset_config['SHAPE_PAD'][1:], batch_size, config=dataset_config).to(device=device)
 
         saved_model = torch.load(flags.model_loc, map_location = device)
         if('model_state_dict' in saved_model.keys()): model.load_state_dict(saved_model['model_state_dict'])
         elif(len(saved_model.keys()) > 1): model.load_state_dict(saved_model)
-        #model.load_state_dict(torch.load(flags.model_loc, map_location=device))
+        model.load_state_dict(torch.load(flags.model_loc, map_location=device))
 
         generated = []
         for i,(E,d_batch) in enumerate(data_loader):
             E = E.to(device=device)
             d_batch = d_batch.to(device=device)
         
-            gen = model(d_batch).detach().cpu().numpy()
+            gen = saved_model(d_batch).detach().cpu().numpy()
             if(i == 0): generated = gen
             else: generated = np.concatenate((generated, gen))
             del E, d_batch
