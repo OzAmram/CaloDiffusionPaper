@@ -133,7 +133,7 @@ if flags.sample:
     print("DATA mean, std", torch.mean(torch_data_tensor), torch.std(torch_data_tensor))
 
     torch_dataset  = torchdata.TensorDataset(torch_E_tensor, torch_data_tensor)
-    data_loader = torchdata.DataLoader(torch_dataset, batch_size = batch_size, shuffle = False)
+    data_loader = torchdata.DataLoader(torch_dataset, batch_size = batch_size, shuffle = False) # DOUG RETURN HERE TO FIX BATCH SIZE FROM CONFIG
 
     avg_showers = std_showers = E_bins = None
     '''
@@ -160,9 +160,11 @@ if flags.sample:
 
     if(flags.model == "AE"): # DOUG MODIFY THIS IF BLOCK FOR OUR AE
         print("Loading AE from " + flags.model_loc)
-        model = CaloEnco(dataset_config['SHAPE_PAD'][1:], batch_size, config=dataset_config).to(device=device)
+        model = CaloEnco(data_shape=dataset_config['SHAPE_PAD'][1:], 
+                            config=dataset_config).to(device=device) # REMOVED BATCH SIZE
 
         saved_model = torch.load(flags.model_loc, map_location = device)
+        print(saved_model.keys())
         if('model_state_dict' in saved_model.keys()): model.load_state_dict(saved_model['model_state_dict'])
         elif(len(saved_model.keys()) > 1): model.load_state_dict(saved_model)
         model.load_state_dict(torch.load(flags.model_loc, map_location=device))
