@@ -22,7 +22,6 @@ def default(val, d):
     return d() if isfunction(d) else d
 
 
-
 def cosine_beta_schedule(nsteps, s=0.008):
     """
     cosine schedule as proposed in https://arxiv.org/abs/2102.09672
@@ -72,10 +71,6 @@ class CylindricalConv(nn.Module):
             padding[1] = 0
         self.kernel_size = kernel_size
         self.conv = nn.Conv3d(dim_in, dim_out, kernel_size=kernel_size, stride = stride, groups = groups, padding = padding, bias = bias)
-        print("Conv3d dim_in:")
-        print(dim_in)
-        print("Conv3d dim_out:")
-        print(dim_out)
         
     def forward(self, x):
         #to achieve 'same' use padding P = ((S-1)*W-S+F)/2, with F = filter size, S = stride, W = input size
@@ -117,18 +112,10 @@ class SinusoidalPositionEmbeddings(nn.Module):
 
 class Block(nn.Module):
     def __init__(self, dim, dim_out, groups = 8, cylindrical = False):
-        print("block dim size:")
-        print(dim)
-        print("block dim_out size:")
-        print(dim_out)
         super().__init__()
         if(not cylindrical): 
             self.proj = nn.Conv3d(dim, dim_out, kernel_size = 3, padding = 1)
         else:  self.proj = CylindricalConv(dim, dim_out, kernel_size = 3, padding = 1)
-        print("C conv dim size:")
-        print(dim)
-        print("C conv dim_out size:")
-        print(dim_out)
         self.norm = nn.GroupNorm(groups, dim_out)
         self.act = nn.SiLU()
 
@@ -157,10 +144,6 @@ class ResnetBlock(nn.Module):
         conv = CylindricalConv(dim, dim_out, kernel_size = 1) if cylindrical else nn.Conv3d(dim, dim_out, kernel_size = 1)
         self.block1 = Block(dim, dim_out, groups=groups, cylindrical = cylindrical)
         self.block2 = Block(dim_out, dim_out, groups=groups, cylindrical = cylindrical)
-        # print("block1 type:")
-        # print(self.block1)
-        # print('blcok2 type:')
-        # print(self.block2)
         self.res_conv = conv if dim != dim_out else nn.Identity()
 
     def forward(self, x, time_emb=None):
@@ -477,7 +460,7 @@ class CondAE(nn.Module):
 
         x = self.init_conv(x) # convolution
 
-        t = self.time_mlp(time)
+        # t = self.time_mlp(time) # DOUG REMOVED BECAUSE WE DO NOT USE DIFFUSION TIME STEP IN EMBEDDING 
         c = self.cond_mlp(cond)
         #conditions = torch.cat([t,c], axis = -1) # DOUG REMOVED DIFFUSION TIME STEP FROM CONDITIONAL INPUT
         conditions = c
