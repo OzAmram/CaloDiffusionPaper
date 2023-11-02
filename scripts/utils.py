@@ -7,20 +7,34 @@ from matplotlib import gridspec
 import matplotlib.ticker as mtick
 import torch
 import torch.nn as nn
-import sys
 import joblib
 from sklearn.preprocessing import QuantileTransformer
-sys.path.append("/home/kballantyne/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper")
-from CaloChallenge.code.XMLHandler import *
-from consts import *
+import sys
+import os
 
 #use tqdm if local, skip if batch job
-import sys
 if sys.stderr.isatty():
     from tqdm import tqdm
 else:
     def tqdm(iterable, **kwargs):
         return iterable
+
+def trim_file_path(cwd:str, num_back:int):
+    '''
+    '''
+    split_path = cwd.split("/")
+    trimmed_split_path = split_path[:-num_back]
+    trimmed_path = "/".join(trimmed_split_path)
+
+    return trimmed_path
+
+# 
+cwd = __file__
+calo_challenge_dir = trim_file_path(cwd=cwd, num_back=3)
+print(calo_challenge_dir)
+sys.path.append(calo_challenge_dir)
+from CaloChallenge.code.XMLHandler import *
+from scripts.consts import *
 
 def split_data_np(data, frac=0.8):
     np.random.shuffle(data)
@@ -28,7 +42,6 @@ def split_data_np(data, frac=0.8):
     train_data =data[:split]
     test_data = data[split:]
     return train_data,test_data
-
 
 def create_phi_image(device, shape = (1,45,16,9)):
 
@@ -80,6 +93,7 @@ line_style = {
     'Geant4':'dotted',
 
     'CaloDiffusion' : '-',
+    'CaloEncoder' : '-',
     'Avg Shower' : '-',
     'CaloDiffusion 400 Steps' : '-',
     'CaloDiffusion 200 Steps' : '-',
@@ -92,6 +106,7 @@ colors = {
     'Geant4':'black',
     'Avg Shower': 'blue',
     'CaloDiffusion': 'blue',
+    'CaloEncoder': 'blue',
     'CaloDiffusion 400 Steps': 'blue',
     'CaloDiffusion 200 Steps': 'green',
     'CaloDiffusion 100 Steps': 'purple',
@@ -103,7 +118,7 @@ name_translate={
 
     'Diffu' : "CaloDiffusion",
     'Avg' : "Avg Shower",
-
+    'AE' : "CaloEncoder"
 
     
     }

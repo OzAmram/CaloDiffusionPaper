@@ -24,7 +24,6 @@ def trim_file_path(cwd:str, num_back:int):
 cwd = __file__
 calo_challenge_dir = trim_file_path(cwd=cwd, num_back=3)
 sys.path.append(calo_challenge_dir)
-print(calo_challenge_dir)
 import scripts.utils as utils
 
 if(torch.cuda.is_available()): device = torch.device('cuda')
@@ -93,7 +92,7 @@ if(flags.job_idx >= 0):
 
 
 if flags.sample:
-    checkpoint_folder = '../models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'],flags.model)
+    checkpoint_folder = '../ae_models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'],flags.model)
     energies = None
     data = None
     for i, dataset in enumerate(dataset_config['EVAL']):
@@ -161,20 +160,20 @@ if flags.sample:
     if(flags.model == "AE"): # DOUG MODIFY THIS IF BLOCK FOR OUR AE
         print("Loading AE from " + flags.model_loc)
         model = CaloEnco(data_shape=dataset_config['SHAPE_PAD'][1:], 
-                            config=dataset_config).to(device=device) # REMOVED BATCH SIZE
+                            config=dataset_config, NN_embed=NN_embed).to(device=device) # REMOVED BATCH SIZE
 
         saved_model = torch.load(flags.model_loc, map_location = device)
-        print(saved_model.keys())
         if('model_state_dict' in saved_model.keys()): model.load_state_dict(saved_model['model_state_dict'])
         elif(len(saved_model.keys()) > 1): model.load_state_dict(saved_model)
-        model.load_state_dict(torch.load(flags.model_loc, map_location=device))
-
+        #model.load_state_dict(torch.load(flags.model_loc, map_location=device))
+    
         generated = []
         for i,(E,d_batch) in enumerate(data_loader):
             E = E.to(device=device)
             d_batch = d_batch.to(device=device)
         
-            gen = saved_model(d_batch).detach().cpu().numpy()
+            gen = model.pred(x=d_batch, E=E, t_emb=None).detach().cpu().numpy()
+            #gen = model(d_batch).detach().cpu().numpy() # DOUG REPLACED DIRECT FORWARD CALL WITH .PRED() FROM CaloEnco
             if(i == 0): generated = gen
             else: generated = np.concatenate((generated, gen))
             del E, d_batch
@@ -220,32 +219,35 @@ if flags.sample:
             del E, d_batch
         end_time = time.time()
         print("Total sampling time %.3f seconds" % (end_time - start_time))
+        
     elif(flags.model == "Avg"):
         #define model just for useful fns
         model = CaloDiffu(dataset_config['SHAPE_PAD'][1:], nevts,config=dataset_config, avg_showers = avg_showers, std_showers = std_showers, E_bins = E_bins ).to(device = device)
 
         generated = model.gen_cold_image(torch_E_tensor, cold_noise_scale).numpy()
     '''
-    #print("GENERATED", np.mean(generated), np.std(generated), np.amax(generated), np.amin(generated))
+
+    print("GENERATED ENERGIES SUMMARY", np.mean(generated), np.std(generated), np.amax(generated), np.amin(generated))
 
     if(not orig_shape): generated = generated.reshape(dataset_config["SHAPE"])
 
-    if(flags.debug):
-        fout_ex = '{}/{}_{}_norm_voxels.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_exts[0])
-        make_histogram([generated.reshape(-1), data.reshape(-1)], ['Diffu', 'Geant4'], ['blue', 'black'], xaxis_label = 'Normalized Voxel Energy', 
+    #if(flags.debug): # DOUG MOVED HISTOGRAM GENERATION OUT OF IF STATEMENT SO WE ALWAYS SEE IT
+    fout_ex = '{}/{}_{}_norm_voxels.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_exts[0])
+    make_histogram([generated.reshape(-1), data.reshape(-1)], ['Diffu', 'Geant4'], ['blue', 'black'], xaxis_label = 'Normalized Voxel Energy', 
                         num_bins = 40, normalize = True, fname = fout_ex)
 
-    generated,energies = utils.ReverseNorm(generated,energies[:nevts],
-                                           shape=dataset_config['SHAPE'],
-                                           logE=dataset_config['logE'],
-                                           max_deposit=dataset_config['MAXDEP'],
-                                           emax = dataset_config['EMAX'],
-                                           emin = dataset_config['EMIN'],
-                                           showerMap = dataset_config['SHOWERMAP'],
-                                           dataset_num  = dataset_num,
-                                           orig_shape = orig_shape,
-                                           ecut = dataset_config['ECUT'],
-                                           )
+    generated,energies = utils.ReverseNorm(voxels=generated,
+                                            e=energies, # REMOVED [:NEVTS] B/C WAS TRUNCATING DATA BY 1 AND PREVENTING BROADCASTING
+                                            shape=dataset_config['SHAPE'],
+                                            logE=dataset_config['logE'],
+                                            max_deposit=dataset_config['MAXDEP'],
+                                            emax = dataset_config['EMAX'],
+                                            emin = dataset_config['EMIN'],
+                                            showerMap = dataset_config['SHOWERMAP'],
+                                            dataset_num  = dataset_num,
+                                            orig_shape = orig_shape,
+                                            ecut = dataset_config['ECUT'],
+                                            )
 
     energies = np.reshape(energies,(-1,1))
     if(dataset_num > 1):
@@ -297,7 +299,7 @@ if(not flags.sample):
     data_dict = {}
     for model in models:
         
-        checkpoint_folder = '../models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'], model) # DOUG removed double dot before /models
+        checkpoint_folder = '../ae_models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'], model) 
         if(flags.generated == ""):
             f_sample = os.path.join(checkpoint_folder,'generated_{}_{}.h5'.format(dataset_config['CHECKPOINT_NAME'], model))
         else:
@@ -322,7 +324,6 @@ if(not flags.sample):
             data.append(show)
             true_energies.append(h5f['incident_energies'][start:end]/1000.)
             if(data[-1].shape[0] == total_evts): break
-
 
     data_dict['Geant4']=np.reshape(data,dataset_config['SHAPE'])
     print(data_dict['Geant4'].shape)
@@ -695,4 +696,5 @@ if(not flags.sample):
             plot_routines[plot](data_dict,energies)
         else:
             high_level.append(plot_routines[plot](data_dict))
+    print(f"Plots generated, check {os.path.abspath(flags.plot_folder)}")
         

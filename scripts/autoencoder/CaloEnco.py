@@ -147,15 +147,20 @@ class CaloEnco(nn.Module):
 
 
     #wrapper for backwards compatability
-    def load_state_dict(self, d):
-        if('noise_predictor' in list(d.keys())[0]):
-            d_new = dict()
+    def load_state_dict(self, d): # DOUG - NOT A NECESSARY FUNCTION BC NO NEED TO TRIM
+        '''
+        d_new = dict()
+        combined_str = " ".join(list(d.keys()))
+        if 'NN_embed' in combined_str:
             for key in d.keys():
-                key_new = key.replace('noise_predictor', 'model')
-                d_new[key_new] = d[key]
+                if 'NN_embed' in key:
+                    continue
+                else:
+                    d_new[key] = d[key]
         else: d_new = d
-
         return super().load_state_dict(d_new)
+        '''
+        return super().load_state_dict(d)
 
     def add_RZPhi(self, x):
         cats = [x]
