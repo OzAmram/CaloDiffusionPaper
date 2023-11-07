@@ -39,6 +39,8 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=1234,help='Pytorch seed')
     parser.add_argument('--reset_training', action='store_true', default=False,help='Retrain')
     parser.add_argument('--binning_file', type=str, default=None)
+    parser.add_argument('--patience', type=int, default=25, help='Patience for early stopper')
+    parser.add_argument('--min_delta', type=float, default=1e-5, help='Minimum loss change range for early stopper')
     flags = parser.parse_args()
 
     cwd = __file__
@@ -141,6 +143,9 @@ if __name__ == '__main__':
 
     checkpoint = dict()
     checkpoint_path = os.path.join(checkpoint_folder, "checkpoint.pth")
+    print("CHECKING!!!!")
+    print(flags.load)
+    print(os.path.exists(checkpoint_path))
     if(flags.load and os.path.exists(checkpoint_path)): 
         print("Loading training checkpoint from %s" % checkpoint_path, flush = True)
         checkpoint = torch.load(checkpoint_path, map_location = device)
@@ -161,7 +166,8 @@ if __name__ == '__main__':
     os.system('cp ae_models.py {}'.format(checkpoint_folder)) # bkp of model def
     os.system('cp {} {}'.format(flags.config,checkpoint_folder)) # bkp of config file
 
-    early_stopper = EarlyStopper(patience = dataset_config['EARLYSTOP'], mode = 'diff', min_delta = 1e-5)
+    # early_stopper = EarlyStopper(patience = dataset_config['EARLYSTOP'], mode = 'diff', min_delta = 1e-5) # DOUG SWITCHED FOR FLAGS
+    early_stopper = EarlyStopper(patience = flags.patience, mode = 'diff', min_delta = flags.min_delta)
     if('early_stop_dict' in checkpoint.keys() and not flags.reset_training): early_stopper.__dict__ = checkpoint['early_stop_dict']
     print(early_stopper.__dict__)
     
