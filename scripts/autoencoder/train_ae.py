@@ -41,6 +41,7 @@ if __name__ == '__main__':
     parser.add_argument('--binning_file', type=str, default=None)
     parser.add_argument('--patience', type=int, default=25, help='Patience for early stopper')
     parser.add_argument('--min_delta', type=float, default=1e-5, help='Minimum loss change range for early stopper')
+    parser.add_argument('--save_folder_append', type=str, default=None, help='Optional text to append to training folder to separate outputs of training runs with the same config file')
     flags = parser.parse_args()
 
     cwd = __file__
@@ -138,6 +139,9 @@ if __name__ == '__main__':
 
     del torch_data_tensor, torch_E_tensor, train_dataset, val_dataset
     checkpoint_folder = '../ae_models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'],flags.model)
+    if flags.save_folder_append is not None: # optionally append another folder title
+        checkpoint_folder = f"{checkpoint_folder}{flags.save_folder_append}/"
+
     if not os.path.exists(checkpoint_folder):
         os.makedirs(checkpoint_folder)
 
