@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+import sys
 
 from inspect import isfunction
 from functools import partial
@@ -357,6 +358,7 @@ class CondAE(nn.Module):
         data_shape = (-1,1,45, 16,9),
         time_embed = True,
         cond_embed = True,
+        resnet_set = [0,1,2]
     ):
         super().__init__()
 
@@ -364,7 +366,9 @@ class CondAE(nn.Module):
         self.channels = channels
         self.block_attn = block_attn
         self.mid_attn = mid_attn
-
+        
+        # adjust dimensionality
+        self.resnet_set = resnet_set
 
 
         #dims = [channels, *map(lambda m: dim * m, dim_mults)]
@@ -457,9 +461,9 @@ class CondAE(nn.Module):
         self.final_conv = nn.Sequential( block_klass(layer_sizes[1], layer_sizes[0]),  final_lay )
 
     def forward(self, x, cond, time):
-
+        print(f"INITIAL DIMS: {x.shape}")
         x = self.init_conv(x) # convolution
-
+        print(f"POST INITIAL CONV: {x.shape}")
         # t = self.time_mlp(time) # DOUG REMOVED BECAUSE WE DO NOT USE DIFFUSION TIME STEP IN EMBEDDING 
         c = self.cond_mlp(cond)
         #conditions = torch.cat([t,c], axis = -1) # DOUG REMOVED DIFFUSION TIME STEP FROM CONDITIONAL INPUT
@@ -469,14 +473,25 @@ class CondAE(nn.Module):
 
         # downsample
         for i, (block1, block2, downsample) in enumerate(self.downs):
+            if i not in self.resnet_set:
+                continue
             x = block1(x, conditions)
+            print(f"POST-BLOCK1 #{i}: {x.shape}")
             x = block2(x, conditions)
-            if(self.block_attn): x = self.downs_attn[i](x)
+            print(f"POST-BLOCK2 #{i}: {x.shape}")
+            if(self.block_attn): 
+                x = self.downs_attn[i](x)
+                print(f"POST-ATTN #{i}: {x.shape}")
             # h.append(x)
             x = downsample(x)
+            print(f"POST-DOWNSAMPLE #{i}: {x.shape}")
 
         # bottleneck
         x = self.mid_block1(x, conditions)
+        print(f"AFTER LAST CONV: {x.shape}")
+        
+        print("*********** STOPPED ************")
+        sys.exit()
         if(self.mid_attn): x = self.mid_attn(x)
         x = self.mid_block2(x, conditions)
 

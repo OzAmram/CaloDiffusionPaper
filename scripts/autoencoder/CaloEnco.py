@@ -25,7 +25,8 @@ from scripts.utils import *
 class CaloEnco(nn.Module):
     """Autoencoder for latent diffusion"""
     def __init__(self, data_shape, config=None, R_Z_inputs = False, training_obj = 'mean_pred', nsteps = 400,
-                    cold_diffu = False, E_bins = None, avg_showers = None, std_showers = None, NN_embed = None):
+                    cold_diffu = False, E_bins = None, avg_showers = None, std_showers = None, NN_embed = None,
+                    resnet_set=[0,1,2]):
         super(CaloEnco, self).__init__()
         self._data_shape = data_shape
         self.nvoxels = np.prod(self._data_shape)
@@ -42,6 +43,7 @@ class CaloEnco(nn.Module):
         self.shower_embed = self.config.get('SHOWER_EMBED', '')
         self.fully_connected = ('FCN' in self.shower_embed)
         self.NN_embed = NN_embed
+        self.resnet_set = resnet_set
 
         #Carina
         #supported = ['noise_pred', 'mean_pred', 'hybrid'] Up to Carina in training script, tell her and/or remove noise_pred
@@ -104,7 +106,7 @@ class CaloEnco(nn.Module):
         block_attn = config.get("BLOCK_ATTN", False)
         mid_attn = config.get("MID_ATTN", False)
         compress_Z = config.get("COMPRESS_Z", False)
-
+        
 
         if(self.fully_connected):
             #fully connected network architecture
@@ -140,7 +142,7 @@ class CaloEnco(nn.Module):
 
             self.model = CondAE(cond_dim = cond_dim, out_dim = 1, channels = in_channels, layer_sizes = layer_sizes, block_attn = block_attn, mid_attn = mid_attn, 
                     cylindrical=config.get('CYLINDRICAL', False), compress_Z = compress_Z, data_shape = calo_summary_shape,
-                    cond_embed = (self.E_embed == 'sin'), time_embed = False ) # DOUG REMOVED TIME EMBEDDING to match sizes
+                    cond_embed = (self.E_embed == 'sin'), time_embed = False, resnet_set=self.resnet_set) # DOUG REMOVED TIME EMBEDDING to match sizes
 
         #print("\n\n Model: \n")
         #summary(self.model, summary_shape)

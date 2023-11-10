@@ -42,6 +42,7 @@ if __name__ == '__main__':
     parser.add_argument('--patience', type=int, default=25, help='Patience for early stopper')
     parser.add_argument('--min_delta', type=float, default=1e-5, help='Minimum loss change range for early stopper')
     parser.add_argument('--save_folder_append', type=str, default=None, help='Optional text to append to training folder to separate outputs of training runs with the same config file')
+    parser.add_argument('--resnet_set', type=int, nargs="+", default=[0,1,2])
     flags = parser.parse_args()
 
     cwd = __file__
@@ -158,7 +159,7 @@ if __name__ == '__main__':
     if(flags.model == "AE"):
             shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
             model = CaloEnco(shape, config=dataset_config, training_obj=training_obj, NN_embed=NN_embed, nsteps=dataset_config['NSTEPS'],
-                cold_diffu=False, avg_showers=None, std_showers=None, E_bins=None).to(device = device)
+                cold_diffu=False, avg_showers=None, std_showers=None, E_bins=None, resnet_set=flags.resnet_set).to(device = device)
 
             #sometimes save only weights, sometimes save other info
             if('model_state_dict' in checkpoint.keys()): model.load_state_dict(checkpoint['model_state_dict'])
