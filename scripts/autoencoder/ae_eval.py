@@ -1,3 +1,4 @@
+from unittest.mock import NonCallableMagicMock
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
@@ -10,7 +11,6 @@ import time, sys, copy
 import torch
 import torch.utils.data as torchdata
 from CaloEnco import *
-# import h5py
 
 def trim_file_path(cwd:str, num_back:int):
     '''
@@ -21,20 +21,14 @@ def trim_file_path(cwd:str, num_back:int):
 
     return trimmed_path
 
-cwd = __file__
-calo_challenge_dir = trim_file_path(cwd=cwd, num_back=3)
-sys.path.append(calo_challenge_dir)
-import scripts.utils as utils
 
 if(torch.cuda.is_available()): device = torch.device('cuda')
 else: device = torch.device('cpu')
 
-plt_exts = ["png", "pdf"]
+plt_exts = ["png"]
 #plt_ext = "pdf"
 rank = 0
 size = 1
-
-utils.SetStyle()
 
 
 parser = argparse.ArgumentParser()
@@ -55,8 +49,18 @@ parser.add_argument('--sample_algo', default = 'ddpm', help = 'What sampling alg
 parser.add_argument('--job_idx', default = -1, type = int, help = 'Split generation among different jobs')
 parser.add_argument('--debug', action='store_true', default=False, help='Debugging options')
 parser.add_argument('--binning_file', type=str, default=None, help='Path to binning file') # added to account for new file structure
+parser.add_argument('--save_folder_append', type=str, default=None, help='Optional text to append to training folder to separate outputs of training runs with the same config file')
+parser.add_argument('--layer_sizes', type=int, nargs="+", default=None, help="Manual layer sizes input instead of from config file")
 
 flags = parser.parse_args()
+
+cwd = __file__
+calo_challenge_dir = trim_file_path(cwd=cwd, num_back=3)
+sys.path.append(calo_challenge_dir)
+print(calo_challenge_dir)
+import scripts.utils as utils
+utils.SetStyle()
+from CaloChallenge.code.XMLHandler import *
 
 nevts = int(flags.nevts)
 dataset_config = utils.LoadJson(flags.config)
@@ -75,9 +79,14 @@ shower_embed = dataset_config.get('SHOWER_EMBED', '')
 orig_shape = ('orig' in shower_embed)
 do_NN_embed = ('NN' in shower_embed)
 
-if(not os.path.exists(flags.plot_folder)): 
-    print("Creating plot directory " + flags.plot_folder)
-    os.system("mkdir " + flags.plot_folder)
+if flags.save_folder_append is not None:
+    plot_folder = f"{flags.plot_folder}/{flags.save_folder_append}"
+else:
+    plot_folder = flags.plot_folder
+
+if(not os.path.exists(plot_folder)): 
+    print("Creating plot directory " + plot_folder)
+    os.system("mkdir " + plot_folder)
 
 evt_start = 0
 job_label = ""
@@ -93,6 +102,8 @@ if(flags.job_idx >= 0):
 
 if flags.sample:
     checkpoint_folder = '../ae_models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'],flags.model)
+    if flags.save_folder_append is not None:
+        checkpoint_folder = f"{checkpoint_folder}{flags.save_folder_append}/"
     energies = None
     data = None
     for i, dataset in enumerate(dataset_config['EVAL']):
@@ -159,8 +170,11 @@ if flags.sample:
 
     if(flags.model == "AE"): # DOUG MODIFY THIS IF BLOCK FOR OUR AE
         print("Loading AE from " + flags.model_loc)
-        model = CaloEnco(data_shape=dataset_config['SHAPE_PAD'][1:], 
-                            config=dataset_config, NN_embed=NN_embed).to(device=device) # REMOVED BATCH SIZE
+        shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
+        model = CaloEnco(shape, config=dataset_config, training_obj=training_obj, NN_embed=NN_embed, 
+                                nsteps=dataset_config['NSTEPS'], cold_diffu=False, avg_showers=None, 
+                                std_showers=None, E_bins=None,
+                                layer_sizes=flags.layer_sizes).to(device=device) # REMOVED BATCH SIZE
 
         saved_model = torch.load(flags.model_loc, map_location = device)
         if('model_state_dict' in saved_model.keys()): model.load_state_dict(saved_model['model_state_dict'])
@@ -178,61 +192,12 @@ if flags.sample:
             else: generated = np.concatenate((generated, gen))
             del E, d_batch
 
-    '''
-    elif(flags.model == "Diffu"):
-        print("Loading Diffu model from " + flags.model_loc)
-
-        shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
-        model = CaloDiffu(shape, config=dataset_config , training_obj = training_obj,NN_embed = NN_embed, nsteps = sample_steps,
-                cold_diffu = cold_diffu, avg_showers = avg_showers, std_showers = std_showers, E_bins = E_bins ).to(device = device)
-
-        saved_model = torch.load(flags.model_loc, map_location = device)
-        if('model_state_dict' in saved_model.keys()): model.load_state_dict(saved_model['model_state_dict'])
-        elif(len(saved_model.keys()) > 1): model.load_state_dict(saved_model)
-
-        generated = []
-        start_time = time.time()
-        for i,(E,d_batch) in enumerate(data_loader):
-            if(E.shape[0] == 0): continue
-            E = E.to(device=device)
-            d_batch = d_batch.to(device=device)
-
-            out = model.Sample(E, num_steps = sample_steps, cold_noise_scale = cold_noise_scale, sample_algo = flags.sample_algo,
-                    debug = flags.debug, sample_offset = flags.sample_offset)
-
-
-            if(flags.debug):
-                gen, all_gen, x0s = out
-                for j in [0,len(all_gen)//4, len(all_gen)//2, 3*len(all_gen)//4, 9*len(all_gen)//10, len(all_gen)-10, len(all_gen)-5,len(all_gen)-1]:
-                    fout_ex = '{}/{}_{}_norm_voxels_gen_step{}.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, j, plt_exts[0])
-                    make_histogram([all_gen[j].reshape(-1), data.reshape(-1)], ['Diffu', 'Geant4'], ['blue', 'black'], xaxis_label = 'Normalized Voxel Energy', 
-                                    num_bins = 40, normalize = True, fname = fout_ex)
-
-                    fout_ex = '{}/{}_{}_norm_voxels_x0_step{}.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, j, plt_exts[0])
-                    make_histogram([x0s[j].reshape(-1), data.reshape(-1)], ['Diffu', 'Geant4'], ['blue', 'black'], xaxis_label = 'Normalized Voxel Energy', 
-                                    num_bins = 40, normalize = True, fname = fout_ex)
-            else: gen = out
-
-        
-            if(i == 0): generated = gen
-            else: generated = np.concatenate((generated, gen))
-            del E, d_batch
-        end_time = time.time()
-        print("Total sampling time %.3f seconds" % (end_time - start_time))
-        
-    elif(flags.model == "Avg"):
-        #define model just for useful fns
-        model = CaloDiffu(dataset_config['SHAPE_PAD'][1:], nevts,config=dataset_config, avg_showers = avg_showers, std_showers = std_showers, E_bins = E_bins ).to(device = device)
-
-        generated = model.gen_cold_image(torch_E_tensor, cold_noise_scale).numpy()
-    '''
-
     print("GENERATED ENERGIES SUMMARY", np.mean(generated), np.std(generated), np.amax(generated), np.amin(generated))
 
     if(not orig_shape): generated = generated.reshape(dataset_config["SHAPE"])
 
     #if(flags.debug): # DOUG MOVED HISTOGRAM GENERATION OUT OF IF STATEMENT SO WE ALWAYS SEE IT
-    fout_ex = '{}/{}_{}_norm_voxels.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_exts[0])
+    fout_ex = '{}/{}_{}_norm_voxels.{}'.format(plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_exts[0])
     make_histogram([generated.reshape(-1), data.reshape(-1)], ['Diffu', 'Geant4'], ['blue', 'black'], xaxis_label = 'Normalized Voxel Energy', 
                         num_bins = 40, normalize = True, fname = fout_ex)
 
@@ -299,7 +264,10 @@ if(not flags.sample):
     data_dict = {}
     for model in models:
         
-        checkpoint_folder = '../ae_models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'], model) 
+        checkpoint_folder = '../ae_models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'], model)
+        if flags.save_folder_append is not None:
+            checkpoint_folder = f"{checkpoint_folder}{flags.save_folder_append}/"
+             
         if(flags.generated == ""):
             f_sample = os.path.join(checkpoint_folder,'generated_{}_{}.h5'.format(dataset_config['CHECKPOINT_NAME'], model))
         else:
@@ -353,7 +321,7 @@ if(not flags.sample):
         binning = np.linspace(0.5, 1.5, 51)
 
         fig,ax0 = utils.HistRoutine(feed_dict,xlabel='Dep. energy / Gen. energy', logy=False,binning=binning, ratio = True, plot_label = flags.plot_label)
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_ERatio_{}_{}.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_ERatio_{}_{}.{}'.format(plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         return feed_dict
 
 
@@ -373,7 +341,7 @@ if(not flags.sample):
         ax.legend(loc='best',fontsize=16,ncol=1)
         plt.tight_layout()
         if(len(flags.plot_label) > 0): ax.set_title(flags.plot_label, fontsize = 20, loc = 'right', style = 'italic')
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_Scatter_{}_{}.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_Scatter_{}_{}.{}'.format(plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
 
 
 
@@ -448,13 +416,13 @@ if(not flags.sample):
             xlabel2 = 'alpha'
             f_str2 = "Alpha"
         fig,ax0 = utils.PlotRoutine(feed_dict_r,xlabel='Layer number', ylabel= '%s-center of energy' % xlabel1, plot_label = flags.plot_label)
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_{}EC_{}_{}.{}'.format(flags.plot_folder,f_str1,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_{}EC_{}_{}.{}'.format(plot_folder,f_str1,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         fig,ax0 = utils.PlotRoutine(feed_dict_phi,xlabel='Layer number', ylabel= '%s-center of energy' % xlabel2, plot_label = flags.plot_label)
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_{}EC_{}_{}.{}'.format(flags.plot_folder,f_str2,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_{}EC_{}_{}.{}'.format(plot_folder,f_str2,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         fig,ax0 = utils.PlotRoutine(feed_dict_r2,xlabel='Layer number', ylabel= '%s-width' % xlabel1, plot_label = flags.plot_label)
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_{}W_{}_{}.{}'.format(flags.plot_folder,f_str1,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_{}W_{}_{}.{}'.format(plot_folder,f_str1,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         fig,ax0 = utils.PlotRoutine(feed_dict_phi2,xlabel='Layer number', ylabel= '%s-width (radians)' % xlabel2, plot_label = flags.plot_label)
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_{}W_{}_{}.{}'.format(flags.plot_folder,f_str2,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_{}W_{}_{}.{}'.format(plot_folder,f_str2,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
 
         return feed_dict_r2
 
@@ -471,7 +439,7 @@ if(not flags.sample):
             feed_dict[key] = _preprocess(data_dict[key])
 
         fig,ax0 = utils.PlotRoutine(feed_dict,xlabel='Layer number', ylabel= 'Mean dep. energy [GeV]', plot_label = flags.plot_label)
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_EnergyZ_{}_{}.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_EnergyZ_{}_{}.{}'.format(plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         return feed_dict
 
     def AverageER(data_dict):
@@ -494,7 +462,7 @@ if(not flags.sample):
             f_str = "R"
 
         fig,ax0 = utils.PlotRoutine(feed_dict,xlabel=xlabel, ylabel= 'Mean Energy [GeV]', plot_label = flags.plot_label)
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_Energy{}_{}_{}.{}'.format(flags.plot_folder,f_str, dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_Energy{}_{}_{}.{}'.format(plot_folder,f_str, dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         return feed_dict
         
     def AverageEPhi(data_dict):
@@ -518,7 +486,7 @@ if(not flags.sample):
 
 
         fig,ax0 = utils.PlotRoutine(feed_dict,xlabel=xlabel, ylabel= 'Mean Energy [GeV]', plot_label = flags.plot_label)
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_Energy{}_{}_{}.{}'.format(flags.plot_folder, f_str, dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_Energy{}_{}_{}.{}'.format(plot_folder, f_str, dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         return feed_dict
 
     def HistEtot(data_dict):
@@ -534,7 +502,7 @@ if(not flags.sample):
         binning = np.geomspace(np.quantile(feed_dict['Geant4'],0.01),np.quantile(feed_dict['Geant4'],1.0),20)
         fig,ax0 = utils.HistRoutine(feed_dict,xlabel='Deposited energy [GeV]', logy=True,binning=binning, plot_label = flags.plot_label)
         ax0.set_xscale("log")
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_TotalE_{}_{}.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_TotalE_{}_{}.{}'.format(plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         return feed_dict
         
     def HistNhits(data_dict):
@@ -552,7 +520,7 @@ if(not flags.sample):
         yScalarFormatter = utils.ScalarFormatterClass(useMathText=True)
         yScalarFormatter.set_powerlimits((0,0))
         ax0.yaxis.set_major_formatter(yScalarFormatter)
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_Nhits_{}_{}.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_Nhits_{}_{}.{}'.format(plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         return feed_dict
 
     def HistVoxelE(data_dict):
@@ -568,7 +536,7 @@ if(not flags.sample):
         binning = np.geomspace(vmin,np.quantile(feed_dict['Geant4'],1.0),50)
         fig,ax0 = utils.HistRoutine(feed_dict,xlabel='Voxel Energy [GeV]', logy= True, binning = binning, ratio = True, normalize = False, plot_label = flags.plot_label)
         ax0.set_xscale("log")
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_VoxelE_{}_{}.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_VoxelE_{}_{}.{}'.format(plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         return feed_dict
 
 
@@ -585,7 +553,7 @@ if(not flags.sample):
             feed_dict[key] = _preprocess(data_dict[key])
 
         fig,ax0 = utils.PlotRoutine(feed_dict,xlabel='Layer number', ylabel= 'Max voxel/Dep. energy', plot_label = flags.plot_label)
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_MaxEnergyZ_{}_{}.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_MaxEnergyZ_{}_{}.{}'.format(plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         return feed_dict
 
     def HistMaxE(data_dict):
@@ -602,7 +570,7 @@ if(not flags.sample):
 
         binning = np.linspace(0,1,10)
         fig,ax0 = utils.HistRoutine(feed_dict,xlabel= 'Max. voxel/Dep. energy',binning=binning,logy=True, plot_label = flags.plot_label)
-        for plt_ext in plt_exts: fig.savefig('{}/FCC_MaxEnergy_{}_{}.{}'.format(flags.plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
+        for plt_ext in plt_exts: fig.savefig('{}/FCC_MaxEnergy_{}_{}.{}'.format(plot_folder,dataset_config['CHECKPOINT_NAME'],flags.model, plt_ext))
         return feed_dict
         
 
@@ -655,13 +623,13 @@ if(not flags.sample):
             for ik,key in enumerate(['Geant4',utils.name_translate[flags.model]]):
                 average = _preprocess(data_dict[key])
 
-                fout_avg = '{}/FCC_{}2D_{}_{}_{}.{}'.format(flags.plot_folder,key,layer,dataset_config['CHECKPOINT_NAME'],flags.model, plt_exts[0])
+                fout_avg = '{}/FCC_{}2D_{}_{}_{}.{}'.format(plot_folder,key,layer,dataset_config['CHECKPOINT_NAME'],flags.model, plt_exts[0])
                 title = "{}, layer number {}".format(key,layer)
                 plot_shower(average, fout = fout_avg, title = title)
 
                 for i in range(nShowers):
                     shower = data_dict[key][i,layer]
-                    fout_ex = '{}/FCC_{}2D_{}_{}_{}_shower{}.{}'.format(flags.plot_folder,key,layer,dataset_config['CHECKPOINT_NAME'],flags.model, i, plt_exts[0])
+                    fout_ex = '{}/FCC_{}2D_{}_{}_{}_shower{}.{}'.format(plot_folder,key,layer,dataset_config['CHECKPOINT_NAME'],flags.model, i, plt_exts[0])
                     title = "{} Shower {}, layer number {}".format(key, i, layer)
                     vmax, vmin = plot_shower(shower, fout = fout_ex, title = title, vmax = vmax, vmin = vmin)
 
@@ -688,7 +656,7 @@ if(not flags.sample):
     if(do_cart_plots):
         plot_routines['2D average shower']=Plot_Shower_2D
 
-    print("Saving plots to "  + os.path.abspath(flags.plot_folder) )
+    print("Saving plots to "  + os.path.abspath(plot_folder) )
     for plot in plot_routines:
         if '2D' in plot and flags.model == 'all':continue #skip scatter plots superimposed
         print(plot)
@@ -696,5 +664,5 @@ if(not flags.sample):
             plot_routines[plot](data_dict,energies)
         else:
             high_level.append(plot_routines[plot](data_dict))
-    print(f"Plots generated, check {os.path.abspath(flags.plot_folder)}")
+    print(f"Plots generated, check {os.path.abspath(plot_folder)}")
         

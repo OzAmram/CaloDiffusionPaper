@@ -1,0 +1,2 @@
+/var/spool/slurmd/job98807/slurm_script: line 13: ​: command not found
+slurmstepd-g007: error: *** JOB 98807 ON g007 CANCELLED AT 2023-10-17T21:31:27 DUE TO TIME LIMIT ***

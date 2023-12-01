@@ -369,7 +369,10 @@ class CondAE(nn.Module):
         
         # adjust dimensionality
         self.resnet_set = resnet_set
-
+        if self.resnet_set != [0,1,2]:
+            self.plus_one = True
+        else:
+            self.plus_one = False
 
         #dims = [channels, *map(lambda m: dim * m, dim_mults)]
         #layer_sizes.insert(0, channels)
@@ -417,9 +420,11 @@ class CondAE(nn.Module):
         for ind, (dim_in, dim_out) in enumerate(in_out):
             is_last = (ind >= (num_resolutions - 1))
             if(not is_last):
-                extra_upsample_dim = [(cur_data_shape[0] + 1)%2, cur_data_shape[1]%2, cur_data_shape[2]%2]
+                if self.plus_one: extra_upsample_dim = [(cur_data_shape[0] + 1)%2, cur_data_shape[1]%2, (cur_data_shape[2] + 1)%2] #ADDED +1 for extra upsampling to match dimensionality for pytorch model KEEGAN
+                else: extra_upsample_dim = [(cur_data_shape[0] + 1)%2, cur_data_shape[1]%2, (cur_data_shape[2])%2]
+                # extra_upsample_dim = [(cur_data_shape[0] + 1)%2, cur_data_shape[1]%2, (cur_data_shape[2])%2]
                 Z_dim = cur_data_shape[0] if not compress_Z else math.ceil(cur_data_shape[0]/2.0)
-                cur_data_shape = (Z_dim, cur_data_shape[1] // 2, cur_data_shape[2] //2)
+                cur_data_shape = (Z_dim, cur_data_shape[1] // 2, cur_data_shape[2] // 2)
                 self.extra_upsamples.append(extra_upsample_dim)
 
             self.downs.append(
@@ -460,47 +465,65 @@ class CondAE(nn.Module):
         else:  final_lay = CylindricalConv(layer_sizes[0], out_dim, 1)
         self.final_conv = nn.Sequential( block_klass(layer_sizes[1], layer_sizes[0]),  final_lay )
 
-    def forward(self, x, cond, time):
-        print(f"INITIAL DIMS: {x.shape}")
+    def forward(self, x, cond, time):      
+        conditions = self.cond_mlp(cond)  
         x = self.init_conv(x) # convolution
-        print(f"POST INITIAL CONV: {x.shape}")
-        # t = self.time_mlp(time) # DOUG REMOVED BECAUSE WE DO NOT USE DIFFUSION TIME STEP IN EMBEDDING 
-        c = self.cond_mlp(cond)
-        #conditions = torch.cat([t,c], axis = -1) # DOUG REMOVED DIFFUSION TIME STEP FROM CONDITIONAL INPUT
-        conditions = c
-
-        # h = []
 
         # downsample
         for i, (block1, block2, downsample) in enumerate(self.downs):
-            if i not in self.resnet_set:
-                continue
-            x = block1(x, conditions)
-            print(f"POST-BLOCK1 #{i}: {x.shape}")
+            x = block1(x, conditions)            
             x = block2(x, conditions)
-            print(f"POST-BLOCK2 #{i}: {x.shape}")
             if(self.block_attn): 
                 x = self.downs_attn[i](x)
-                print(f"POST-ATTN #{i}: {x.shape}")
-            # h.append(x)
             x = downsample(x)
-            print(f"POST-DOWNSAMPLE #{i}: {x.shape}")
 
         # bottleneck
         x = self.mid_block1(x, conditions)
-        print(f"AFTER LAST CONV: {x.shape}")
-        
-        print("*********** STOPPED ************")
-        sys.exit()
         if(self.mid_attn): x = self.mid_attn(x)
         x = self.mid_block2(x, conditions)
 
         # upsample
         for i, (block1, block2, upsample) in enumerate(self.ups):
-            # x = torch.cat((x, h.pop()), dim=1) # DOUG REMOVED SKIP CONNECTIONS
             x = block1(x, conditions)
             x = block2(x, conditions)
-            if(self.block_attn): x = self.ups_attn[i](x)
+            if(self.block_attn): 
+                x = self.ups_attn[i](x)
             x = upsample(x)
-
+     
         return self.final_conv(x)
+    
+    def encode(self, x, cond):
+        conditions = self.cond_mlp(cond)
+
+        x = self.init_conv(x) # convolution
+
+        # downsample
+        for i, (block1, block2, downsample) in enumerate(self.downs):
+            x = block1(x, conditions)
+            x = block2(x, conditions)
+            if(self.block_attn): 
+                x = self.downs_attn[i](x)
+            x = downsample(x)
+
+        # bottleneck convolution and attention 
+        x = self.mid_block1(x, conditions)
+        if(self.mid_attn): x = self.mid_attn(x)
+        
+        return x
+
+    def decode(self, x, cond): 
+        conditions = self.cond_mlp(cond)
+
+        # bottleneck attention and convolution
+        if(self.mid_attn): x = self.mid_attn(x)
+        x = self.mid_block2(x, conditions)
+
+        # upsample
+        for i, (block1, block2, upsample) in enumerate(self.ups):
+            x = block1(x, conditions)
+            x = block2(x, conditions)
+            if(self.block_attn): 
+                x = self.ups_attn[i](x)
+            x = upsample(x)
+     
+        return self.final_conv(x) # final convolution

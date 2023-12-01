@@ -1,0 +1,2 @@
+/var/spool/slurmd/job99601/slurm_script: line 13: ​: command not found
+cp: cannot stat 'ae_models.py': No such file or directory

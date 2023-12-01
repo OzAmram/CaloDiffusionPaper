@@ -42,7 +42,10 @@ if __name__ == '__main__':
     parser.add_argument('--patience', type=int, default=25, help='Patience for early stopper')
     parser.add_argument('--min_delta', type=float, default=1e-5, help='Minimum loss change range for early stopper')
     parser.add_argument('--save_folder_append', type=str, default=None, help='Optional text to append to training folder to separate outputs of training runs with the same config file')
-    parser.add_argument('--resnet_set', type=int, nargs="+", default=[0,1,2])
+    parser.add_argument('--resnet_set', type=int, nargs="+", default=[0,1,2]) # --resnet set 0 2
+    parser.add_argument('--layer_sizes', type=int, nargs="+", default=None, help="Manual layer sizes input instead of from config file")
+    parser.add_argument('--no_early_stop', action='store_true', help="Turns off early stop functionality and defailts to max epochs")
+    parser.add_argument('--max_epochs', type=int, default=None, help="Manually assign a maximum number of epochs")
     flags = parser.parse_args()
 
     cwd = __file__
@@ -62,7 +65,12 @@ if __name__ == '__main__':
     nholdout  = dataset_config.get('HOLDOUT', 0)
 
     batch_size = dataset_config['BATCH']
-    num_epochs = dataset_config['MAXEPOCH']
+
+    if flags.no_early_stop:
+        if flags.max_epochs is None: num_epochs = dataset_config['MAXEPOCH']
+        else: num_epochs = flags.max_epochs
+    else: num_epochs = dataset_config['MAXEPOCH']
+
     early_stop = dataset_config['EARLYSTOP']
     #training_obj = dataset_config.get('TRAINING_OBJ', 'mean_pred')
     training_obj = 'mean_pred'
@@ -158,8 +166,10 @@ if __name__ == '__main__':
 
     if(flags.model == "AE"):
             shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
-            model = CaloEnco(shape, config=dataset_config, training_obj=training_obj, NN_embed=NN_embed, nsteps=dataset_config['NSTEPS'],
-                cold_diffu=False, avg_showers=None, std_showers=None, E_bins=None, resnet_set=flags.resnet_set).to(device = device)
+            model = CaloEnco(shape, config=dataset_config, training_obj=training_obj, NN_embed=NN_embed, 
+                                nsteps=dataset_config['NSTEPS'], cold_diffu=False, avg_showers=None, 
+                                std_showers=None, E_bins=None, resnet_set=flags.resnet_set,
+                                layer_sizes=flags.layer_sizes).to(device = device)
 
             #sometimes save only weights, sometimes save other info
             if('model_state_dict' in checkpoint.keys()): model.load_state_dict(checkpoint['model_state_dict'])
@@ -188,11 +198,13 @@ if __name__ == '__main__':
     val_losses = np.zeros(num_epochs)
     start_epoch = 0
     min_validation_loss = 99999.
-    if('train_loss_hist' in checkpoint.keys() and not flags.reset_training): 
+    if('train_loss_hist' in checkpoint.keys() and not flags.reset_training):
+        train_hist = checkpoint['train_loss_hist']
+        # print("CHECK: Epoch", train_hist['epoch'])
         training_losses = checkpoint['train_loss_hist']
         val_losses = checkpoint['val_loss_hist']
         start_epoch = checkpoint['epoch'] + 1
-
+        
     #training loop - CARINA
     for epoch in range(start_epoch, num_epochs):
         print("Beginning epoch %i" % epoch, flush=True)
@@ -252,9 +264,10 @@ if __name__ == '__main__':
             torch.save(model.state_dict(), os.path.join(checkpoint_folder, 'best_val.pth'))
             min_validation_loss = val_loss
 
-        if(early_stopper.early_stop(val_loss - train_loss)):
-            print("Early stopping!")
-            break
+        if not flags.no_early_stop: # only use early stopper if it has not been turned off by the flag
+            if(early_stopper.early_stop(val_loss - train_loss)):
+                print("Early stopping!")
+                break
 
         # save the model
         model.eval()

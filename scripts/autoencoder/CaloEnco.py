@@ -26,7 +26,7 @@ class CaloEnco(nn.Module):
     """Autoencoder for latent diffusion"""
     def __init__(self, data_shape, config=None, R_Z_inputs = False, training_obj = 'mean_pred', nsteps = 400,
                     cold_diffu = False, E_bins = None, avg_showers = None, std_showers = None, NN_embed = None,
-                    resnet_set=[0,1,2]):
+                    resnet_set=[0,1,2], layer_sizes=None):
         super(CaloEnco, self).__init__()
         self._data_shape = data_shape
         self.nvoxels = np.prod(self._data_shape)
@@ -102,7 +102,8 @@ class CaloEnco(nn.Module):
         self.time_embed = config.get("TIME_EMBED", 'sin')
         self.E_embed = config.get("COND_EMBED", 'sin')
         cond_dim = config['COND_SIZE_UNET']
-        layer_sizes = config['LAYER_SIZE_UNET']
+        if layer_sizes is None:
+            layer_sizes = config['LAYER_SIZE_UNET']
         block_attn = config.get("BLOCK_ATTN", False)
         mid_attn = config.get("MID_ATTN", False)
         compress_Z = config.get("COMPRESS_Z", False)
@@ -312,6 +313,20 @@ class CaloEnco(nn.Module):
         if(self.NN_embed is not None): x = self.NN_embed.enc(x).to(x.device)
         out = self.model(self.add_RZPhi(x), E, t_emb)
         if(self.NN_embed is not None): out = self.NN_embed.dec(out).to(x.device)
+        return out
+
+    def encode(self, x, E):
+
+        if(self.NN_embed is not None): x = self.NN_embed.enc(x).to(x.device)
+        out = self.model.encode(self.add_RZPhi(x), E)
+    
+        return out
+
+    def decode(self, x, E):
+
+        out = self.model.decode(self.add_RZPhi(x), E)
+        if(self.NN_embed is not None): out = self.NN_embed.dec(out).to(x.device)
+    
         return out
 
     # def denoise(self, x, E, t_emb):

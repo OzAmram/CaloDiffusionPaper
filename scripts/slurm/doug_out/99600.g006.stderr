@@ -1,0 +1,7 @@
+/var/spool/slurmd/job99600/slurm_script: line 13: ​: command not found
+Traceback (most recent call last):
+  File "/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper/scripts/autoencoder/train_ae.py", line 51, in <module>
+    dataset_config = LoadJson(flags.config)
+  File "/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper/scripts/utils.py", line 447, in LoadJson
+    return yaml.safe_load(open(JSONPATH))
+FileNotFoundError: [Errno 2] No such file or directory: '/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper/configs/config_dataset1_phion.json'

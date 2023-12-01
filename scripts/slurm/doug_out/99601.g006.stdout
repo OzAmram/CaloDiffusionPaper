@@ -1,0 +1,718 @@
+/net/projects/fermi-1/doug
+TRAIN AUTOENCODER
+/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper
+TRAINING OPTIONS
+{'FILES': ['dataset_1_pions_1.hdf5'], 'EVAL': ['dataset_1_pions_2.hdf5'], 'BIN_FILE': '/work1/cms_mlsim/oamram/CaloDiffusion/CaloChallenge/code/binning_dataset_1_pions.xml', 'PART_TYPE': 'pion', 'AVG_SHOWER_LOC': '/wclustre/cms_mlsim/denoise/CaloChallenge/dataset_2_avg_showers.hdf5', 'DATASET_NUM': 0, 'HOLDOUT': 0, 'SHAPE_ORIG': [-1, 533], 'SHAPE': [-1, 7, 10, 23, 1], 'SHAPE_PAD': [-1, 1, 7, 10, 23], 'BATCH': 128, 'LR': '4e-4', 'MAXEPOCH': 1000, 'NLAYERS': 3, 'EARLYSTOP': 20, 'LAYER_SIZE_AE': [32, 64, 64, 32], 'DIM_RED_AE': [0, 2, 0, 2], 'LAYER_SIZE_UNET': [16, 16, 16, 32], 'COND_SIZE_UNET': 128, 'KERNEL': [3, 3, 3], 'STRIDE': [3, 2, 2], 'BLOCK_ATTN': True, 'MID_ATTN': True, 'COMPRESS_Z': True, 'ACT': 'swish', 'EMBED': 128, 'EMAX': 4194.304, 'EMIN': 0.256, 'ECUT': 1e-07, 'logE': True, 'MAXDEP': 3.1, 'CYLINDRICAL': True, 'SHOWERMAP': 'logit-norm', 'R_Z_INPUT': True, 'PHI_INPUT': True, 'BETA_MAX': 0.02, 'NOISE_SCHED': 'cosine', 'NSTEPS': 400, 'COLD_DIFFU': False, 'COLD_NOISE': 1.0, 'TRAINING_OBJ': 'noise_pred', 'LOSS_TYPE': 'l2', 'TIME_EMBED': 'sigma', 'COND_EMBED': 'id', 'SHOWER_EMBED': 'orig-NN', 'CHECKPOINT_NAME': 'dataset1_pion'}
+Event start, stop:  0 None
+dset 10
+Data Shape (120230, 533)
+Conv3d dim_in:
+4
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+32
+block dim size:
+16
+block dim_out size:
+32
+Conv3d dim_in:
+16
+Conv3d dim_out:
+32
+C conv dim size:
+16
+C conv dim_out size:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+block dim size:
+32
+block dim_out size:
+16
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+C conv dim size:
+32
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+1
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+{'patience': 20, 'min_delta': 1e-05, 'counter': 0, 'min_validation_loss': inf, 'mode': 'diff'}
+Beginning epoch 0
+loss: 0.3507824716192014
+val_loss: 0.21966562753028057
+SAVING
+Beginning epoch 1
+loss: 0.2019540526541661
+val_loss: 0.18500711013239327
+SAVING
+Beginning epoch 2
+loss: 0.1604670197778709
+val_loss: 0.1405460835031584
+SAVING
+Beginning epoch 3
+loss: 0.12332677852376382
+val_loss: 0.10829074532850415
+SAVING
+Beginning epoch 4
+loss: 0.09484782471823901
+val_loss: 0.08379759972399854
+SAVING
+Beginning epoch 5
+loss: 0.0742103328301253
+val_loss: 0.0657627912013666
+SAVING
+Beginning epoch 6
+loss: 0.05931229913637546
+val_loss: 0.05424783931027913
+SAVING
+Beginning epoch 7
+loss: 0.04980971964917732
+val_loss: 0.04552703556862283
+SAVING
+Beginning epoch 8
+loss: 0.04257416427694961
+val_loss: 0.03950348287715134
+SAVING
+Beginning epoch 9
+loss: 0.037458153189776536
+val_loss: 0.03549722915000104
+SAVING
+Beginning epoch 10
+loss: 0.03360098620669191
+val_loss: 0.03212876790962743
+SAVING
+Beginning epoch 11
+loss: 0.030158627988101545
+val_loss: 0.028596471321392567
+SAVING
+Beginning epoch 12
+loss: 0.027013141344836417
+val_loss: 0.02704152780591596
+SAVING
+Beginning epoch 13
+loss: 0.025228274100284106
+val_loss: 0.024247468574672727
+SAVING
+Beginning epoch 14
+loss: 0.024079944996701762
+val_loss: 0.024563481489605937
+SAVING
+Beginning epoch 15
+loss: 0.023133061760954924
+val_loss: 0.023509569690688282
+SAVING
+Beginning epoch 16
+loss: 0.022304236107926645
+val_loss: 0.021887679974026714
+SAVING
+Beginning epoch 17
+loss: 0.02154188439860772
+val_loss: 0.021517852902518095
+SAVING
+Beginning epoch 18
+loss: 0.020934444640032267
+val_loss: 0.020769478687157866
+SAVING
+Beginning epoch 19
+loss: 0.020326907393313918
+val_loss: 0.020133393268424567
+SAVING
+Beginning epoch 20
+loss: 0.01977793344101858
+val_loss: 0.019543583148178903
+SAVING
+Beginning epoch 21
+loss: 0.019321524071855674
+val_loss: 0.02020611837242089
+SAVING
+Beginning epoch 22
+loss: 0.018917557953603947
+val_loss: 0.01916021349714369
+SAVING
+Beginning epoch 23
+loss: 0.01856215471268931
+val_loss: 0.01843575941042063
+SAVING
+Beginning epoch 24
+loss: 0.018176241308096353
+val_loss: 0.01811755296001409
+SAVING
+Beginning epoch 25
+loss: 0.01786235838228643
+val_loss: 0.017828863946364282
+SAVING
+Beginning epoch 26
+loss: 0.017596521864741928
+val_loss: 0.017672064720738866
+SAVING
+Beginning epoch 27
+loss: 0.017304593183156174
+val_loss: 0.017426157740096673
+SAVING
+Beginning epoch 28
+loss: 0.017037418525251043
+val_loss: 0.017188030909350577
+SAVING
+Beginning epoch 29
+loss: 0.01679416313110029
+val_loss: 0.016791200892775193
+SAVING
+Beginning epoch 30
+loss: 0.01655047924813811
+val_loss: 0.016742581825254232
+SAVING
+Beginning epoch 31
+loss: 0.01638686942642972
+val_loss: 0.01698317140974897
+SAVING
+Beginning epoch 32
+loss: 0.016194491679820983
+val_loss: 0.016089054154800185
+SAVING
+Beginning epoch 33
+loss: 0.0160281734799824
+val_loss: 0.015995284040451894
+SAVING
+Beginning epoch 34
+loss: 0.01586286657989883
+val_loss: 0.01607380633024459
+SAVING
+Beginning epoch 35
+loss: 0.015702885322655097
+val_loss: 0.01577617160658887
+SAVING
+Beginning epoch 36
+loss: 0.015576299877886257
+val_loss: 0.015794594501349943
+SAVING
+Beginning epoch 37
+loss: 0.015449874674218319
+val_loss: 0.01597334202114783
+SAVING
+Beginning epoch 38
+loss: 0.015295744093790073
+val_loss: 0.015477758066081409
+SAVING
+Beginning epoch 39
+loss: 0.015184402411036631
+val_loss: 0.01527668877194325
+SAVING
+Beginning epoch 40
+loss: 0.015109781787797193
+val_loss: 0.015324037119164958
+SAVING
+Beginning epoch 41
+loss: 0.014973532722025028
+val_loss: 0.015099955617007634
+SAVING
+Beginning epoch 42
+loss: 0.014870612576687814
+val_loss: 0.015389367475682963
+SAVING
+Beginning epoch 43
+loss: 0.014749347196148245
+val_loss: 0.014860141091048717
+SAVING
+Beginning epoch 44
+loss: 0.01464483767948364
+val_loss: 0.014835952761325431
+SAVING
+Beginning epoch 45
+loss: 0.014563868867841844
+val_loss: 0.01492717204258797
+SAVING
+Beginning epoch 46
+loss: 0.014473741773856299
+val_loss: 0.014756878520897094
+SAVING
+Beginning epoch 47
+loss: 0.014396240520937945
+val_loss: 0.014525309548521718
+SAVING
+Beginning epoch 48
+loss: 0.014312107899274038
+val_loss: 0.014437309446487022
+SAVING
+Beginning epoch 49
+loss: 0.014217179170687298
+val_loss: 0.014225631377639924
+SAVING
+Beginning epoch 50
+loss: 0.014147440416829308
+val_loss: 0.014424099864319284
+SAVING
+Beginning epoch 51
+loss: 0.014063931633257896
+val_loss: 0.014127082719817653
+SAVING
+Beginning epoch 52
+loss: 0.013999985685998641
+val_loss: 0.014262303207994353
+SAVING
+Beginning epoch 53
+loss: 0.01391997069670575
+val_loss: 0.014052847512594774
+Early stopping!
+Saving to ../ae_models/dataset1_pion_AE/

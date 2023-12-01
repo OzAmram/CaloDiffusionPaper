@@ -120,7 +120,6 @@ name_translate={
     'Avg' : "Avg Shower",
     'AE' : "CaloEncoder"
 
-    
     }
 
 def SetStyle():
@@ -500,7 +499,15 @@ def ReverseNorm(voxels,e,shape,emax,emin,max_deposit=2,logE=True, showerMap ='lo
         data = np.square(voxels)
 
 
-    if(dataset_num > 1 or orig_shape): 
+    if(dataset_num > 1 or orig_shape):
+        print("VOXELS SHAPE", voxels.shape)
+        print("PRINT VOXELS SHAPE [0]", voxels.shape[0])
+        print("DATA RESHAPE SHAPE", (data.reshape(voxels.shape[0], -1)).shape)
+        print("MAX DEPOSIT", max_deposit) 
+        print("ENERGY SHAPE", energy.shape)
+        print("ENERGY RESHAPE Shape", (energy.reshape(-1,1)).shape)
+        print("PRINT LEFT SIDE OPERATION SHape", (data.reshape(voxels.shape[0],-1)*max_deposit).shape)
+        print("PRINT RIGHT SIDE OPERATION Shape", (max_deposit*energy.reshape(-1,1)).shape)
         data = data.reshape(voxels.shape[0],-1)*max_deposit*energy.reshape(-1,1)
     else:
         if(dataset_num == 1): 
