@@ -1,0 +1,2 @@
+/var/spool/slurmd/job98802/slurm_script: line 13: ​: command not found
+slurmstepd-g004: error: *** JOB 98802 ON g004 CANCELLED AT 2023-10-17T13:09:57 ***

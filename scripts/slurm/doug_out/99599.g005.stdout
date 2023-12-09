@@ -1,0 +1,2422 @@
+/net/projects/fermi-1/doug
+TRAIN AUTOENCODER
+/net/projects/fermi-1/doug/2023-Autumn-Clinic-Fermi-CaloDiffusionPaper
+TRAINING OPTIONS
+{'FILES': ['dataset_1_photons_1.hdf5'], 'EVAL': ['dataset_1_photons_2.hdf5'], 'BIN_FILE': '/work1/cms_mlsim/oamram/CaloDiffusion/CaloChallenge/code/binning_dataset_1_photons.xml', 'PART_TYPE': 'photon', 'AVG_SHOWER_LOC': '/wclustre/cms_mlsim/denoise/CaloChallenge/dataset_2_avg_showers.hdf5', 'DATASET_NUM': 1, 'HOLDOUT': 0, 'SHAPE_ORIG': [-1, 368], 'SHAPE': [-1, 5, 10, 30, 1], 'SHAPE_PAD': [-1, 1, 5, 10, 30], 'BATCH': 128, 'LR': '4e-4', 'MAXEPOCH': 1000, 'NLAYERS': 3, 'EARLYSTOP': 20, 'LAYER_SIZE_AE': [32, 64, 64, 32], 'DIM_RED_AE': [0, 2, 0, 2], 'LAYER_SIZE_UNET': [16, 16, 16, 32], 'COND_SIZE_UNET': 128, 'KERNEL': [3, 3, 3], 'STRIDE': [3, 2, 2], 'BLOCK_ATTN': True, 'MID_ATTN': True, 'COMPRESS_Z': True, 'ACT': 'swish', 'EMBED': 128, 'EMAX': 4194.304, 'EMIN': 0.256, 'ECUT': 1e-07, 'logE': True, 'MAXDEP': 3.1, 'CYLINDRICAL': True, 'SHOWERMAP': 'logit-norm', 'R_Z_INPUT': True, 'PHI_INPUT': True, 'BETA_MAX': 0.02, 'NOISE_SCHED': 'cosine', 'NSTEPS': 400, 'COLD_DIFFU': False, 'COLD_NOISE': 1.0, 'TRAINING_OBJ': 'noise_pred', 'LOSS_TYPE': 'l2', 'TIME_EMBED': 'sigma', 'COND_EMBED': 'id', 'SHOWER_EMBED': 'orig-NN', 'CHECKPOINT_NAME': 'dataset1_phot'}
+Event start, stop:  0 None
+dset 11
+Data Shape (121000, 368)
+Conv3d dim_in:
+4
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+32
+block dim size:
+16
+block dim_out size:
+32
+Conv3d dim_in:
+16
+Conv3d dim_out:
+32
+C conv dim size:
+16
+C conv dim_out size:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+block dim size:
+32
+block dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+32
+C conv dim size:
+32
+C conv dim_out size:
+32
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+block dim size:
+32
+block dim_out size:
+16
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+C conv dim size:
+32
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+96
+Conv3d dim_in:
+32
+Conv3d dim_out:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+1
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+block dim size:
+16
+block dim_out size:
+16
+Conv3d dim_in:
+16
+Conv3d dim_out:
+16
+C conv dim size:
+16
+C conv dim_out size:
+16
+{'patience': 20, 'min_delta': 1e-05, 'counter': 0, 'min_validation_loss': inf, 'mode': 'diff'}
+Beginning epoch 0
+loss: 0.3901945815342872
+val_loss: 0.2656965126663866
+SAVING
+Beginning epoch 1
+loss: 0.22975692597787772
+val_loss: 0.19998910372525874
+SAVING
+Beginning epoch 2
+loss: 0.17715079861864522
+val_loss: 0.14996466696472235
+SAVING
+Beginning epoch 3
+loss: 0.12436869810914519
+val_loss: 0.09663647785782814
+SAVING
+Beginning epoch 4
+loss: 0.07448045111988759
+val_loss: 0.05412029857996484
+SAVING
+Beginning epoch 5
+loss: 0.04660737753581645
+val_loss: 0.03672496696383181
+SAVING
+Beginning epoch 6
+loss: 0.03155568563634187
+val_loss: 0.025448724693080908
+SAVING
+Beginning epoch 7
+loss: 0.020785530246052872
+val_loss: 0.01700526951405574
+SAVING
+Beginning epoch 8
+loss: 0.014932943226547162
+val_loss: 0.012307499351740723
+SAVING
+Beginning epoch 9
+loss: 0.011370724096050977
+val_loss: 0.00968415183211926
+SAVING
+Beginning epoch 10
+loss: 0.008810349404742358
+val_loss: 0.008475906930496576
+SAVING
+Beginning epoch 11
+loss: 0.00657598067895134
+val_loss: 0.005555382362422599
+SAVING
+Beginning epoch 12
+loss: 0.004802261720427696
+val_loss: 0.0036887560043037987
+SAVING
+Beginning epoch 13
+loss: 0.003536065438627937
+val_loss: 0.002970923863115235
+SAVING
+Beginning epoch 14
+loss: 0.0026159333458995048
+val_loss: 0.0021000803172798225
+SAVING
+Beginning epoch 15
+loss: 0.0021283943702719308
+val_loss: 0.001412756524612786
+SAVING
+Beginning epoch 16
+loss: 0.0015507132648687292
+val_loss: 0.0015289597573991812
+SAVING
+Beginning epoch 17
+loss: 0.001339791683898312
+val_loss: 0.000988455322853119
+SAVING
+Beginning epoch 18
+loss: 0.0011848365005183343
+val_loss: 0.0007585138803951337
+SAVING
+Beginning epoch 19
+loss: 0.0009177237600974266
+val_loss: 0.0009207685919098137
+SAVING
+Beginning epoch 20
+loss: 0.0008058350540703945
+val_loss: 0.0006693072230096014
+SAVING
+Beginning epoch 21
+loss: 0.0007451902538513653
+val_loss: 0.0004464515671789856
+SAVING
+Beginning epoch 22
+loss: 0.0006008878999591843
+val_loss: 0.0010974257307218938
+SAVING
+Beginning epoch 23
+loss: 0.000546320734103384
+val_loss: 0.00037309241195825836
+SAVING
+Beginning epoch 24
+loss: 0.00047243460656644137
+val_loss: 0.0006997769552571567
+SAVING
+Beginning epoch 25
+loss: 0.00043813736614248765
+val_loss: 0.0003263414640661696
+SAVING
+Beginning epoch 26
+loss: 0.0004028618785747285
+val_loss: 0.0008819107385188288
+SAVING
+Beginning epoch 27
+loss: 0.0003862391138102961
+val_loss: 0.0003641376478440115
+SAVING
+Beginning epoch 28
+loss: 0.0003526933877181554
+val_loss: 0.0003105792004621627
+SAVING
+Beginning epoch 29
+loss: 0.00029976406013833436
+val_loss: 0.00036439226270476224
+SAVING
+Beginning epoch 30
+loss: 0.00029641639654679847
+val_loss: 0.0002392596987602432
+SAVING
+Beginning epoch 31
+loss: 0.00027611365115249166
+val_loss: 0.00038069864988333585
+SAVING
+Beginning epoch 32
+loss: 0.00026361436047142405
+val_loss: 0.0001370228005533802
+SAVING
+Beginning epoch 33
+loss: 0.00024034268814708114
+val_loss: 0.0002023758710826039
+SAVING
+Beginning epoch 34
+loss: 0.000232498562233482
+val_loss: 0.00018393002433249805
+SAVING
+Beginning epoch 35
+loss: 0.00021141351342394678
+val_loss: 0.00016854836883820252
+SAVING
+Beginning epoch 36
+loss: 0.00020523041115014695
+val_loss: 0.00011767151739495859
+SAVING
+Beginning epoch 37
+loss: 0.0001918914605261334
+val_loss: 0.0001616469466760361
+SAVING
+Beginning epoch 38
+loss: 0.00019135581910564154
+val_loss: 0.00011230682082921857
+SAVING
+Beginning epoch 39
+loss: 0.0001799174068181136
+val_loss: 0.00010147132440617727
+SAVING
+Beginning epoch 40
+loss: 0.00016448189379486363
+val_loss: 8.195636642918082e-05
+SAVING
+Beginning epoch 41
+loss: 0.00016279737231420383
+val_loss: 8.214047920773737e-05
+SAVING
+Beginning epoch 42
+loss: 0.0001501132057220542
+val_loss: 0.00011700731843568936
+SAVING
+Beginning epoch 43
+loss: 0.00014671103383251697
+val_loss: 7.544142730258615e-05
+SAVING
+Beginning epoch 44
+loss: 0.0001404161789945086
+val_loss: 7.230523050579072e-05
+SAVING
+Beginning epoch 45
+loss: 0.00013313530883292808
+val_loss: 0.00018604722787694952
+SAVING
+Beginning epoch 46
+loss: 0.00012706978501608238
+val_loss: 6.682024394021808e-05
+SAVING
+Beginning epoch 47
+loss: 0.00012312286221617005
+val_loss: 0.00010992729528905482
+SAVING
+Beginning epoch 48
+loss: 0.00011849178947919263
+val_loss: 0.00020692680210603113
+SAVING
+Beginning epoch 49
+loss: 0.00011339383666413438
+val_loss: 0.00011845894929957838
+SAVING
+Beginning epoch 50
+loss: 0.00011641461489163513
+val_loss: 5.2521613814489275e-05
+SAVING
+Beginning epoch 51
+loss: 0.0001024226404111705
+val_loss: 6.473183504926388e-05
+SAVING
+Beginning epoch 52
+loss: 0.00010362387170129866
+val_loss: 5.634714805535008e-05
+SAVING
+Beginning epoch 53
+loss: 9.728992362266328e-05
+val_loss: 0.00013866738299839199
+SAVING
+Beginning epoch 54
+loss: 0.00010138192997667047
+val_loss: 5.434409629255959e-05
+SAVING
+Beginning epoch 55
+loss: 8.770524984347549e-05
+val_loss: 7.176031118740892e-05
+SAVING
+Beginning epoch 56
+loss: 9.322200285576183e-05
+val_loss: 9.282077991602038e-05
+SAVING
+Beginning epoch 57
+loss: 8.521874107049624e-05
+val_loss: 4.423638667606316e-05
+SAVING
+Beginning epoch 58
+loss: 9.013038184161476e-05
+val_loss: 0.0001134604251899258
+SAVING
+Beginning epoch 59
+loss: 7.543673580277475e-05
+val_loss: 9.025463236546681e-05
+SAVING
+Beginning epoch 60
+loss: 8.251775674562032e-05
+val_loss: 4.123294200608015e-05
+SAVING
+Beginning epoch 61
+loss: 7.530019064376316e-05
+val_loss: 3.375307726817251e-05
+SAVING
+Beginning epoch 62
+loss: 8.460684161199519e-05
+val_loss: 2.7919928124645875e-05
+SAVING
+Beginning epoch 63
+loss: 6.581099088990002e-05
+val_loss: 2.6250979650464782e-05
+SAVING
+Beginning epoch 64
+loss: 6.899675868927392e-05
+val_loss: 4.121993272196383e-05
+SAVING
+Beginning epoch 65
+loss: 6.44630253422048e-05
+val_loss: 7.100954426790287e-05
+SAVING
+Beginning epoch 66
+loss: 6.790173693703556e-05
+val_loss: 3.095478230944267e-05
+SAVING
+Beginning epoch 67
+loss: 6.611471161618713e-05
+val_loss: 0.00013734434623087586
+SAVING
+Beginning epoch 68
+loss: 6.09949373105862e-05
+val_loss: 2.7044434100901873e-05
+SAVING
+Beginning epoch 69
+loss: 6.630547569099024e-05
+val_loss: 3.695333290240124e-05
+SAVING
+Beginning epoch 70
+loss: 5.6129423570038755e-05
+val_loss: 4.76079846559745e-05
+SAVING
+Beginning epoch 71
+loss: 5.662579785994647e-05
+val_loss: 3.6048202340500953e-05
+SAVING
+Beginning epoch 72
+loss: 5.4719594013997396e-05
+val_loss: 4.8985702166428896e-05
+SAVING
+Beginning epoch 73
+loss: 5.896684793149698e-05
+val_loss: 2.5437894781672683e-05
+SAVING
+Beginning epoch 74
+loss: 6.15065313891295e-05
+val_loss: 1.817389116874604e-05
+SAVING
+Beginning epoch 75
+loss: 4.659721353571296e-05
+val_loss: 2.737751337533577e-05
+SAVING
+Beginning epoch 76
+loss: 5.043084078650607e-05
+val_loss: 6.111660326829403e-05
+SAVING
+Beginning epoch 77
+loss: 5.0461205403993134e-05
+val_loss: 0.00012429006513319646
+SAVING
+Beginning epoch 78
+loss: 4.83139952685538e-05
+val_loss: 3.162832206111437e-05
+SAVING
+Beginning epoch 79
+loss: 5.4669626613767785e-05
+val_loss: 1.6274517190435237e-05
+SAVING
+Beginning epoch 80
+loss: 4.303199380816087e-05
+val_loss: 1.7499990001813553e-05
+SAVING
+Beginning epoch 81
+loss: 4.693159441662308e-05
+val_loss: 2.0720325703453928e-05
+SAVING
+Beginning epoch 82
+loss: 4.38741535425431e-05
+val_loss: 2.2110350009440905e-05
+SAVING
+Beginning epoch 83
+loss: 4.3843873106482926e-05
+val_loss: 3.5786703757738404e-05
+SAVING
+Beginning epoch 84
+loss: 4.3714794613907404e-05
+val_loss: 0.00011416492957259449
+SAVING
+Beginning epoch 85
+loss: 4.090515499319283e-05
+val_loss: 1.7605637405953094e-05
+SAVING
+Beginning epoch 86
+loss: 4.478135022948288e-05
+val_loss: 5.689152370085678e-05
+SAVING
+Beginning epoch 87
+loss: 4.065864602433347e-05
+val_loss: 7.488834205400002e-05
+SAVING
+Beginning epoch 88
+loss: 3.9883579439216434e-05
+val_loss: 1.7793837466509193e-05
+SAVING
+Beginning epoch 89
+loss: 4.261729283364309e-05
+val_loss: 2.3076733258945547e-05
+SAVING
+Beginning epoch 90
+loss: 3.405241129633337e-05
+val_loss: 1.89294184475701e-05
+SAVING
+Beginning epoch 91
+loss: 3.73081775624494e-05
+val_loss: 3.437081672735742e-05
+SAVING
+Beginning epoch 92
+loss: 3.772224550150565e-05
+val_loss: 1.8251454119462336e-05
+SAVING
+Beginning epoch 93
+loss: 3.5530730309036885e-05
+val_loss: 4.6236677955906565e-05
+SAVING
+Beginning epoch 94
+loss: 3.290032501734377e-05
+val_loss: 3.8484160438496425e-05
+SAVING
+Beginning epoch 95
+loss: 3.6759105199310924e-05
+val_loss: 3.648613979543959e-05
+SAVING
+Beginning epoch 96
+loss: 3.384909015736566e-05
+val_loss: 1.3101283130567999e-05
+SAVING
+Beginning epoch 97
+loss: 3.416891984928572e-05
+val_loss: 1.4650392624620072e-05
+SAVING
+Beginning epoch 98
+loss: 3.223993914573599e-05
+val_loss: 1.3245974642673054e-05
+SAVING
+Beginning epoch 99
+loss: 3.4662541153594966e-05
+val_loss: 1.1046253297228733e-05
+SAVING
+Beginning epoch 100
+loss: 3.3335077507299093e-05
+val_loss: 2.8254098421238154e-05
+SAVING
+Beginning epoch 101
+loss: 3.100093277200937e-05
+val_loss: 2.7433830337671884e-05
+SAVING
+Beginning epoch 102
+loss: 2.9757747183590363e-05
+val_loss: 5.931384496339171e-05
+SAVING
+Beginning epoch 103
+loss: 3.0820543783469005e-05
+val_loss: 1.667513883353742e-05
+SAVING
+Beginning epoch 104
+loss: 2.883423642865026e-05
+val_loss: 9.341505507800833e-05
+SAVING
+Beginning epoch 105
+loss: 2.8266234745496516e-05
+val_loss: 2.550159689222633e-05
+SAVING
+Beginning epoch 106
+loss: 2.878923255446633e-05
+val_loss: 1.7054900203681464e-05
+SAVING
+Beginning epoch 107
+loss: 2.7598546489458042e-05
+val_loss: 2.047654312955786e-05
+SAVING
+Beginning epoch 108
+loss: 2.8083686201944827e-05
+val_loss: 1.2801827458940646e-05
+SAVING
+Beginning epoch 109
+loss: 2.7392454654066238e-05
+val_loss: 4.3369301840331745e-05
+SAVING
+Beginning epoch 110
+loss: 2.8115126128366104e-05
+val_loss: 1.4347410777985024e-05
+SAVING
+Beginning epoch 111
+loss: 2.5848444078296756e-05
+val_loss: 3.2163177705332996e-05
+SAVING
+Beginning epoch 112
+loss: 2.5994061082142547e-05
+val_loss: 1.0175748562866996e-05
+SAVING
+Beginning epoch 113
+loss: 2.633831664906351e-05
+val_loss: 2.0563196531057514e-05
+SAVING
+Beginning epoch 114
+loss: 2.895293880499422e-05
+val_loss: 8.792062362772413e-05
+SAVING
+Beginning epoch 115
+loss: 2.198387887598182e-05
+val_loss: 9.040096180067106e-06
+SAVING
+Beginning epoch 116
+loss: 2.44766143800034e-05
+val_loss: 1.0319335090148534e-05
+SAVING
+Beginning epoch 117
+loss: 2.4941588406621652e-05
+val_loss: 1.6306597572879647e-05
+SAVING
+Beginning epoch 118
+loss: 2.5471138980688168e-05
+val_loss: 1.992533140162803e-05
+SAVING
+Beginning epoch 119
+loss: 2.818104843838264e-05
+val_loss: 2.617603309823915e-05
+SAVING
+Beginning epoch 120
+loss: 2.1587554243610183e-05
+val_loss: 1.3279662166304418e-05
+SAVING
+Beginning epoch 121
+loss: 2.5882075744982163e-05
+val_loss: 4.328827977382978e-05
+SAVING
+Beginning epoch 122
+loss: 2.0151597410422165e-05
+val_loss: 4.499129246257108e-05
+SAVING
+Beginning epoch 123
+loss: 2.3986184105162454e-05
+val_loss: 1.0433811631871873e-05
+SAVING
+Beginning epoch 124
+loss: 2.4041666689747705e-05
+val_loss: 6.048021961606524e-06
+SAVING
+Beginning epoch 125
+loss: 1.915772303679809e-05
+val_loss: 1.0819834424695165e-05
+SAVING
+Beginning epoch 126
+loss: 2.9299643614563566e-05
+val_loss: 4.832273560450502e-06
+SAVING
+Beginning epoch 127
+loss: 1.7371882678384083e-05
+val_loss: 1.9260833884710708e-05
+SAVING
+Beginning epoch 128
+loss: 2.2161440364837277e-05
+val_loss: 6.480056767108642e-06
+SAVING
+Beginning epoch 129
+loss: 1.949758508820635e-05
+val_loss: 1.5731108184079115e-05
+SAVING
+Beginning epoch 130
+loss: 2.0001496121456248e-05
+val_loss: 1.3982412370674404e-05
+SAVING
+Beginning epoch 131
+loss: 2.1545103974894847e-05
+val_loss: 2.1076839684482508e-05
+SAVING
+Beginning epoch 132
+loss: 2.0682692820062686e-05
+val_loss: 7.624762548390132e-06
+SAVING
+Beginning epoch 133
+loss: 1.9979563023244098e-05
+val_loss: 2.8785905900368676e-05
+SAVING
+Beginning epoch 134
+loss: 2.0173304736755512e-05
+val_loss: 7.824092995499188e-06
+SAVING
+Beginning epoch 135
+loss: 1.88249498122067e-05
+val_loss: 7.425404753672077e-05
+SAVING
+Beginning epoch 136
+loss: 2.0178710829823465e-05
+val_loss: 1.7329498136155375e-05
+SAVING
+Beginning epoch 137
+loss: 1.8991003388809397e-05
+val_loss: 3.526499220780851e-05
+SAVING
+Beginning epoch 138
+loss: 1.8741308218495898e-05
+val_loss: 3.106081965623315e-05
+SAVING
+Beginning epoch 139
+loss: 1.9826438900244242e-05
+val_loss: 1.6312590483260428e-05
+SAVING
+Beginning epoch 140
+loss: 1.8925876408154104e-05
+val_loss: 6.571454249892603e-06
+SAVING
+Beginning epoch 141
+loss: 1.6739852025526416e-05
+val_loss: 2.7427986360250967e-05
+SAVING
+Beginning epoch 142
+loss: 1.8663192341858604e-05
+val_loss: 8.126069539851504e-06
+SAVING
+Beginning epoch 143
+loss: 1.8488885652303323e-05
+val_loss: 7.811570636912504e-06
+SAVING
+Beginning epoch 144
+loss: 1.9089502188762708e-05
+val_loss: 4.774091720860205e-06
+SAVING
+Beginning epoch 145
+loss: 1.699377357954064e-05
+val_loss: 3.85111498090596e-05
+SAVING
+Beginning epoch 146
+loss: 1.7513559293889213e-05
+val_loss: 8.752582263542523e-06
+SAVING
+Beginning epoch 147
+loss: 1.8000587615958706e-05
+val_loss: 5.138176388306458e-05
+SAVING
+Beginning epoch 148
+loss: 1.763780805257607e-05
+val_loss: 1.1370074402370398e-05
+SAVING
+Beginning epoch 149
+loss: 1.8373245812151946e-05
+val_loss: 3.988164086851458e-06
+SAVING
+Beginning epoch 150
+loss: 1.6134494006141565e-05
+val_loss: 9.397835378556818e-06
+SAVING
+Beginning epoch 151
+loss: 1.529438761159028e-05
+val_loss: 9.074978433872416e-06
+SAVING
+Beginning epoch 152
+loss: 1.8015792451098688e-05
+val_loss: 9.198934440320673e-06
+SAVING
+Beginning epoch 153
+loss: 1.693015262171639e-05
+val_loss: 7.559684214151864e-05
+SAVING
+Beginning epoch 154
+loss: 1.5126075009083709e-05
+val_loss: 1.6504263539003737e-05
+SAVING
+Beginning epoch 155
+loss: 1.7280235031318457e-05
+val_loss: 3.988891237472863e-06
+SAVING
+Beginning epoch 156
+loss: 1.5350851577157535e-05
+val_loss: 6.573415482986528e-05
+SAVING
+Beginning epoch 157
+loss: 1.678788052869543e-05
+val_loss: 1.393503475490331e-05
+SAVING
+Beginning epoch 158
+loss: 1.835315137993316e-05
+val_loss: 8.393384981721116e-06
+SAVING
+Beginning epoch 159
+loss: 1.3257330649526351e-05
+val_loss: 2.340289920795558e-05
+SAVING
+Beginning epoch 160
+loss: 1.534734747195474e-05
+val_loss: 4.106834686533314e-06
+SAVING
+Beginning epoch 161
+loss: 1.648787806476746e-05
+val_loss: 6.10094202207799e-06
+SAVING
+Beginning epoch 162
+loss: 1.4662318582354805e-05
+val_loss: 2.084627169711945e-05
+SAVING
+Beginning epoch 163
+loss: 1.740971459776572e-05
+val_loss: 8.783163968448054e-06
+SAVING
+Beginning epoch 164
+loss: 1.486310101759656e-05
+val_loss: 2.584599294518547e-05
+SAVING
+Beginning epoch 165
+loss: 1.3250375937544805e-05
+val_loss: 7.114528213131847e-06
+SAVING
+Beginning epoch 166
+loss: 1.6712967623734856e-05
+val_loss: 7.442430768618655e-06
+SAVING
+Beginning epoch 167
+loss: 1.5901999102909338e-05
+val_loss: 1.1159413063555995e-05
+SAVING
+Beginning epoch 168
+loss: 1.3673404984516464e-05
+val_loss: 4.462901585265825e-06
+SAVING
+Beginning epoch 169
+loss: 1.4532327897136134e-05
+val_loss: 5.6465428219204295e-06
+SAVING
+Beginning epoch 170
+loss: 1.4220347939734625e-05
+val_loss: 3.638891027075145e-06
+SAVING
+Beginning epoch 171
+loss: 1.450259044044224e-05
+val_loss: 5.445669622006367e-06
+SAVING
+Beginning epoch 172
+loss: 1.4003143689367889e-05
+val_loss: 6.583432411683993e-05
+SAVING
+Beginning epoch 173
+loss: 1.5012623344180846e-05
+val_loss: 7.2194013106306725e-06
+SAVING
+Beginning epoch 174
+loss: 1.468844309651538e-05
+val_loss: 2.305400275744573e-05
+SAVING
+Beginning epoch 175
+loss: 1.5207703152903455e-05
+val_loss: 4.446787926726885e-06
+SAVING
+Beginning epoch 176
+loss: 1.302791614970243e-05
+val_loss: 4.716643305483289e-06
+SAVING
+Beginning epoch 177
+loss: 1.4060713963611655e-05
+val_loss: 2.199353527853226e-05
+SAVING
+Beginning epoch 178
+loss: 2.0374671393526355e-05
+val_loss: 2.217431073513324e-06
+SAVING
+Beginning epoch 179
+loss: 9.479559029284078e-06
+val_loss: 8.754744155506249e-05
+SAVING
+Beginning epoch 180
+loss: 1.4357905270479032e-05
+val_loss: 1.670214896876132e-05
+SAVING
+Beginning epoch 181
+loss: 1.2592888822948126e-05
+val_loss: 1.3162474939671367e-05
+SAVING
+Beginning epoch 182
+loss: 1.4797058300775543e-05
+val_loss: 8.110585828086495e-06
+SAVING
+Beginning epoch 183
+loss: 1.339433584628601e-05
+val_loss: 2.7572503979531e-05
+SAVING
+Beginning epoch 184
+loss: 1.2371485597306664e-05
+val_loss: 1.7650292571027384e-05
+SAVING
+Beginning epoch 185
+loss: 1.3846204563862864e-05
+val_loss: 5.128499836079665e-05
+SAVING
+Beginning epoch 186
+loss: 1.3787359443599304e-05
+val_loss: 3.7360182624313535e-06
+SAVING
+Beginning epoch 187
+loss: 1.2830404481246886e-05
+val_loss: 7.480590758065555e-06
+SAVING
+Beginning epoch 188
+loss: 1.3025585565569894e-05
+val_loss: 1.008735422198095e-05
+SAVING
+Beginning epoch 189
+loss: 1.3278926649579276e-05
+val_loss: 1.3364247472925623e-05
+SAVING
+Beginning epoch 190
+loss: 1.2604032246715055e-05
+val_loss: 5.953741950653354e-06
+SAVING
+Beginning epoch 191
+loss: 1.266207474327756e-05
+val_loss: 4.310808650111988e-06
+SAVING
+Beginning epoch 192
+loss: 1.3122508903506969e-05
+val_loss: 3.4738899490599887e-06
+SAVING
+Beginning epoch 193
+loss: 1.2408827683939036e-05
+val_loss: 8.616403749943907e-06
+SAVING
+Beginning epoch 194
+loss: 1.1626382614628e-05
+val_loss: 6.993782700563725e-06
+SAVING
+Beginning epoch 195
+loss: 1.2309759963375823e-05
+val_loss: 7.937693456843706e-06
+Epoch 00196: reducing learning rate of group 0 to 4.0000e-05.
+SAVING
+Beginning epoch 196
+loss: 1.0118896622812844e-06
+val_loss: 9.545993529794122e-07
+SAVING
+Beginning epoch 197
+loss: 9.503066716075156e-07
+val_loss: 9.789979442206792e-07
+SAVING
+Beginning epoch 198
+loss: 9.670168650620046e-07
+val_loss: 9.981608939078412e-07
+SAVING
+Beginning epoch 199
+loss: 9.926489004970084e-07
+val_loss: 1.0348329612312021e-06
+SAVING
+Beginning epoch 200
+loss: 1.0282948096291016e-06
+val_loss: 1.0690913284915823e-06
+SAVING
+Beginning epoch 201
+loss: 1.0666604181544733e-06
+val_loss: 1.2476835902970391e-06
+SAVING
+Beginning epoch 202
+loss: 1.0773691142711738e-06
+val_loss: 1.0582047457639522e-06
+SAVING
+Beginning epoch 203
+loss: 1.0788376824503435e-06
+val_loss: 1.068835065949879e-06
+SAVING
+Beginning epoch 204
+loss: 1.043875547116474e-06
+val_loss: 1.0434156493688597e-06
+SAVING
+Beginning epoch 205
+loss: 1.0132850449828757e-06
+val_loss: 1.1023290769699857e-06
+SAVING
+Beginning epoch 206
+loss: 1.0091713055663237e-06
+val_loss: 1.0135145107020614e-06
+SAVING
+Beginning epoch 207
+loss: 9.796359388214052e-07
+val_loss: 1.0351465459574632e-06
+SAVING
+Beginning epoch 208
+loss: 9.529448597298717e-07
+val_loss: 9.446061382354407e-07
+SAVING
+Beginning epoch 209
+loss: 9.694345404530133e-07
+val_loss: 9.805224298726361e-07
+SAVING
+Beginning epoch 210
+loss: 9.315488163008976e-07
+val_loss: 1.1140123674490305e-06
+SAVING
+Beginning epoch 211
+loss: 9.33833549640951e-07
+val_loss: 9.261774205786961e-07
+SAVING
+Beginning epoch 212
+loss: 9.021119411014677e-07
+val_loss: 1.035349547816917e-06
+SAVING
+Beginning epoch 213
+loss: 9.181505012111076e-07
+val_loss: 1.1297109493388631e-06
+SAVING
+Beginning epoch 214
+loss: 8.984000224395843e-07
+val_loss: 8.860697037940093e-07
+SAVING
+Beginning epoch 215
+loss: 8.604004728055376e-07
+val_loss: 9.417278733226468e-07
+SAVING
+Beginning epoch 216
+loss: 8.742706483675267e-07
+val_loss: 8.189225770244045e-07
+SAVING
+Beginning epoch 217
+loss: 8.880545217623342e-07
+val_loss: 8.530900728742317e-07
+SAVING
+Beginning epoch 218
+loss: 8.330555969714443e-07
+val_loss: 7.871885679512968e-07
+SAVING
+Beginning epoch 219
+loss: 8.382097728038465e-07
+val_loss: 9.103024471552461e-07
+SAVING
+Beginning epoch 220
+loss: 8.439198024712932e-07
+val_loss: 8.455808142571186e-07
+SAVING
+Beginning epoch 221
+loss: 8.438411083432412e-07
+val_loss: 8.851877553329552e-07
+SAVING
+Beginning epoch 222
+loss: 8.336368715510471e-07
+val_loss: 7.440240402745626e-07
+SAVING
+Beginning epoch 223
+loss: 8.0873822022018e-07
+val_loss: 8.323455391214787e-07
+SAVING
+Beginning epoch 224
+loss: 8.061734110834093e-07
+val_loss: 8.849078587387903e-07
+SAVING
+Beginning epoch 225
+loss: 8.167958299195991e-07
+val_loss: 8.476554993694022e-07
+SAVING
+Beginning epoch 226
+loss: 7.733617376520647e-07
+val_loss: 7.471207820671366e-07
+SAVING
+Beginning epoch 227
+loss: 7.763161768218821e-07
+val_loss: 8.838868964944659e-07
+SAVING
+Beginning epoch 228
+loss: 7.861993397843086e-07
+val_loss: 8.199468642084265e-07
+SAVING
+Beginning epoch 229
+loss: 7.918842389338565e-07
+val_loss: 8.116388518771255e-07
+SAVING
+Beginning epoch 230
+loss: 7.721959981913258e-07
+val_loss: 1.0040752338739712e-06
+SAVING
+Beginning epoch 231
+loss: 7.863552561917884e-07
+val_loss: 7.742228943461156e-07
+SAVING
+Beginning epoch 232
+loss: 7.565902487512451e-07
+val_loss: 6.878900080664607e-07
+SAVING
+Beginning epoch 233
+loss: 7.306222900624064e-07
+val_loss: 8.350114718480104e-07
+SAVING
+Beginning epoch 234
+loss: 7.385008418612017e-07
+val_loss: 7.285587477787923e-07
+SAVING
+Beginning epoch 235
+loss: 7.574400396224157e-07
+val_loss: 7.336440549025469e-07
+SAVING
+Beginning epoch 236
+loss: 7.221744096395652e-07
+val_loss: 7.131297786279799e-07
+SAVING
+Beginning epoch 237
+loss: 7.199956875788687e-07
+val_loss: 6.928670108638318e-07
+SAVING
+Beginning epoch 238
+loss: 7.400109971522352e-07
+val_loss: 7.177751713307246e-07
+SAVING
+Beginning epoch 239
+loss: 7.107245413754387e-07
+val_loss: 7.356434028698574e-07
+SAVING
+Beginning epoch 240
+loss: 7.138061570898418e-07
+val_loss: 6.962586867366938e-07
+SAVING
+Beginning epoch 241
+loss: 7.052761864274747e-07
+val_loss: 6.401090289932974e-07
+SAVING
+Beginning epoch 242
+loss: 7.158092654379116e-07
+val_loss: 7.415028120780795e-07
+SAVING
+Beginning epoch 243
+loss: 6.875226382414634e-07
+val_loss: 6.534935981646004e-07
+SAVING
+Beginning epoch 244
+loss: 6.878153450841963e-07
+val_loss: 7.085664930413336e-07
+SAVING
+Beginning epoch 245
+loss: 6.967119298510331e-07
+val_loss: 6.535112128192491e-07
+SAVING
+Beginning epoch 246
+loss: 6.962394433942189e-07
+val_loss: 8.755732934928283e-07
+SAVING
+Beginning epoch 247
+loss: 6.724472101846524e-07
+val_loss: 6.625758646965602e-07
+SAVING
+Beginning epoch 248
+loss: 6.848037495739112e-07
+val_loss: 6.643299637347245e-07
+SAVING
+Beginning epoch 249
+loss: 6.749544577241435e-07
+val_loss: 6.335210841057169e-07
+SAVING
+Beginning epoch 250
+loss: 6.703820146123318e-07
+val_loss: 6.24775586008492e-07
+SAVING
+Beginning epoch 251
+loss: 6.823283134215544e-07
+val_loss: 6.658759782311163e-07
+SAVING
+Beginning epoch 252
+loss: 6.701254151476041e-07
+val_loss: 6.647217970297993e-07
+SAVING
+Beginning epoch 253
+loss: 6.748942121842433e-07
+val_loss: 6.094267928987597e-07
+SAVING
+Beginning epoch 254
+loss: 6.7795630239637e-07
+val_loss: 6.014526299725436e-07
+SAVING
+Beginning epoch 255
+loss: 6.640689062478984e-07
+val_loss: 7.490677264068439e-07
+SAVING
+Beginning epoch 256
+loss: 6.572079956641795e-07
+val_loss: 6.115652819465742e-07
+SAVING
+Beginning epoch 257
+loss: 6.600730166717912e-07
+val_loss: 7.612829728112072e-07
+SAVING
+Beginning epoch 258
+loss: 6.839233221502971e-07
+val_loss: 6.838169477298796e-07
+SAVING
+Beginning epoch 259
+loss: 6.546203172322282e-07
+val_loss: 6.029636437342304e-07
+SAVING
+Beginning epoch 260
+loss: 6.519010726570012e-07
+val_loss: 6.316142371937352e-07
+SAVING
+Beginning epoch 261
+loss: 6.420946495119499e-07
+val_loss: 6.292269352945342e-07
+SAVING
+Beginning epoch 262
+loss: 6.649345475953348e-07
+val_loss: 8.983042145130857e-07
+SAVING
+Beginning epoch 263
+loss: 6.416183555712333e-07
+val_loss: 1.1753527576434914e-06
+SAVING
+Beginning epoch 264
+loss: 6.272367793538668e-07
+val_loss: 6.725454205691126e-07
+SAVING
+Beginning epoch 265
+loss: 6.368690187447096e-07
+val_loss: 6.780508918279632e-07
+SAVING
+Beginning epoch 266
+loss: 6.341799396780479e-07
+val_loss: 5.637781073410609e-07
+SAVING
+Beginning epoch 267
+loss: 6.252939075313488e-07
+val_loss: 5.681217473552415e-07
+SAVING
+Beginning epoch 268
+loss: 6.479837164353957e-07
+val_loss: 5.959749587482677e-07
+SAVING
+Beginning epoch 269
+loss: 6.335048012718388e-07
+val_loss: 5.447344753926867e-07
+SAVING
+Beginning epoch 270
+loss: 6.056372735325744e-07
+val_loss: 5.972198936702421e-07
+SAVING
+Beginning epoch 271
+loss: 6.40031475840242e-07
+val_loss: 5.680206127052911e-07
+SAVING
+Beginning epoch 272
+loss: 6.092087146080122e-07
+val_loss: 5.665197755168034e-07
+SAVING
+Beginning epoch 273
+loss: 6.199981746884991e-07
+val_loss: 6.213743444290308e-07
+SAVING
+Beginning epoch 274
+loss: 6.289813134233089e-07
+val_loss: 5.440273020305643e-07
+SAVING
+Beginning epoch 275
+loss: 6.133728850250122e-07
+val_loss: 5.844535182955618e-07
+SAVING
+Beginning epoch 276
+loss: 6.177620006167161e-07
+val_loss: 6.53122958257728e-07
+SAVING
+Beginning epoch 277
+loss: 6.162995868688502e-07
+val_loss: 6.878798451036576e-07
+SAVING
+Beginning epoch 278
+loss: 6.145420966005524e-07
+val_loss: 7.108806546736085e-07
+SAVING
+Beginning epoch 279
+loss: 6.087977833521566e-07
+val_loss: 6.083842273531279e-07
+SAVING
+Beginning epoch 280
+loss: 6.025760587727288e-07
+val_loss: 7.360786517271573e-07
+SAVING
+Beginning epoch 281
+loss: 6.169454286789539e-07
+val_loss: 5.928108058648998e-07
+SAVING
+Beginning epoch 282
+loss: 6.051062526005387e-07
+val_loss: 5.701794757154038e-07
+SAVING
+Beginning epoch 283
+loss: 6.002134917683415e-07
+val_loss: 6.716916548349462e-07
+SAVING
+Beginning epoch 284
+loss: 6.04412977750076e-07
+val_loss: 6.127437268813236e-07
+SAVING
+Beginning epoch 285
+loss: 5.939636210357334e-07
+val_loss: 5.95679126782145e-07
+SAVING
+Beginning epoch 286
+loss: 5.866989622176112e-07
+val_loss: 9.41003672954741e-07
+SAVING
+Beginning epoch 287
+loss: 5.924825609496626e-07
+val_loss: 5.454853275180758e-07
+SAVING
+Beginning epoch 288
+loss: 5.857077924312323e-07
+val_loss: 6.376139151438059e-07
+SAVING
+Beginning epoch 289
+loss: 5.80493256806486e-07
+val_loss: 6.343040545641382e-07
+SAVING
+Beginning epoch 290
+loss: 5.988598226269406e-07
+val_loss: 6.412652813766508e-07
+SAVING
+Beginning epoch 291
+loss: 5.888492541201353e-07
+val_loss: 5.141786072220986e-07
+SAVING
+Beginning epoch 292
+loss: 5.881977622226684e-07
+val_loss: 5.356426703749196e-07
+SAVING
+Beginning epoch 293
+loss: 5.836107843759155e-07
+val_loss: 5.898663479917597e-07
+SAVING
+Beginning epoch 294
+loss: 5.947407717797124e-07
+val_loss: 6.228761023207817e-07
+SAVING
+Beginning epoch 295
+loss: 5.813395378439945e-07
+val_loss: 6.147512394850502e-07
+SAVING
+Beginning epoch 296
+loss: 5.794101613490518e-07
+val_loss: 5.330706752009602e-07
+SAVING
+Beginning epoch 297
+loss: 5.611927939489376e-07
+val_loss: 5.215730433340301e-07
+SAVING
+Beginning epoch 298
+loss: 5.825117195942214e-07
+val_loss: 5.555025261817488e-07
+SAVING
+Beginning epoch 299
+loss: 5.707552239653577e-07
+val_loss: 6.236877446797376e-07
+SAVING
+Beginning epoch 300
+loss: 5.587678495996909e-07
+val_loss: 5.138094408407533e-07
+SAVING
+Beginning epoch 301
+loss: 5.883199692808507e-07
+val_loss: 5.045933022529425e-07
+SAVING
+Beginning epoch 302
+loss: 5.712706834812245e-07
+val_loss: 6.500957299618343e-07
+SAVING
+Beginning epoch 303
+loss: 5.585145880243531e-07
+val_loss: 5.185689080773545e-07
+SAVING
+Beginning epoch 304
+loss: 5.85798064906189e-07
+val_loss: 5.417736053834207e-07
+SAVING
+Beginning epoch 305
+loss: 5.697342036069923e-07
+val_loss: 1.118438665600197e-06
+SAVING
+Beginning epoch 306
+loss: 5.675487798556837e-07
+val_loss: 5.992876562949033e-07
+SAVING
+Beginning epoch 307
+loss: 5.743025846767799e-07
+val_loss: 5.735373165439534e-07
+SAVING
+Beginning epoch 308
+loss: 5.749631196622499e-07
+val_loss: 5.258944071329097e-07
+SAVING
+Beginning epoch 309
+loss: 5.62858688754125e-07
+val_loss: 5.5723706587985e-07
+SAVING
+Beginning epoch 310
+loss: 5.696365063139506e-07
+val_loss: 5.677221275125473e-07
+SAVING
+Beginning epoch 311
+loss: 5.655536518923472e-07
+val_loss: 5.055075938187169e-07
+SAVING
+Beginning epoch 312
+loss: 5.715802418877723e-07
+val_loss: 5.103925903386868e-07
+SAVING
+Beginning epoch 313
+loss: 5.547806828724503e-07
+val_loss: 5.14672276502827e-07
+SAVING
+Beginning epoch 314
+loss: 5.698146652542874e-07
+val_loss: 6.117378677732683e-07
+SAVING
+Beginning epoch 315
+loss: 5.730359482889646e-07
+val_loss: 6.465748265807787e-07
+SAVING
+Beginning epoch 316
+loss: 5.659068790181713e-07
+val_loss: 5.497118857013281e-07
+SAVING
+Beginning epoch 317
+loss: 5.739658257751972e-07
+val_loss: 4.744807539045211e-07
+SAVING
+Beginning epoch 318
+loss: 5.775898396602012e-07
+val_loss: 4.969733723014478e-07
+SAVING
+Beginning epoch 319
+loss: 5.75710749724034e-07
+val_loss: 5.140636334013373e-07
+SAVING
+Beginning epoch 320
+loss: 5.738983015557033e-07
+val_loss: 5.890530539712107e-07
+SAVING
+Beginning epoch 321
+loss: 5.741769867389808e-07
+val_loss: 5.289315353907177e-07
+SAVING
+Beginning epoch 322
+loss: 5.754959247282097e-07
+val_loss: 4.874945180428229e-07
+SAVING
+Beginning epoch 323
+loss: 5.69582447939811e-07
+val_loss: 5.41374780347826e-07
+SAVING
+Beginning epoch 324
+loss: 5.58399183511431e-07
+val_loss: 5.130474956421123e-07
+SAVING
+Beginning epoch 325
+loss: 5.6478756394526e-07
+val_loss: 6.597685611864044e-07
+SAVING
+Beginning epoch 326
+loss: 5.760942384054191e-07
+val_loss: 6.417649338275201e-07
+SAVING
+Beginning epoch 327
+loss: 5.80562481945098e-07
+val_loss: 4.95926211445768e-07
+SAVING
+Beginning epoch 328
+loss: 5.545192705942249e-07
+val_loss: 5.153338936676372e-07
+SAVING
+Beginning epoch 329
+loss: 5.579029872686856e-07
+val_loss: 4.784969900369183e-07
+SAVING
+Beginning epoch 330
+loss: 5.636579424676417e-07
+val_loss: 5.683395807435016e-07
+SAVING
+Beginning epoch 331
+loss: 5.644172715625445e-07
+val_loss: 4.777901741478454e-07
+SAVING
+Beginning epoch 332
+loss: 5.505293450522488e-07
+val_loss: 5.635000037164247e-07
+SAVING
+Beginning epoch 333
+loss: 5.597166653122562e-07
+val_loss: 5.20069311534544e-07
+SAVING
+Beginning epoch 334
+loss: 5.728811710122867e-07
+val_loss: 7.825336311584642e-07
+SAVING
+Beginning epoch 335
+loss: 5.389265852070242e-07
+val_loss: 5.844195103191582e-07
+SAVING
+Beginning epoch 336
+loss: 5.519810133436276e-07
+val_loss: 5.707064242158876e-07
+SAVING
+Beginning epoch 337
+loss: 5.61783090335612e-07
+val_loss: 9.052766654989887e-07
+SAVING
+Beginning epoch 338
+loss: 5.546232112247884e-07
+val_loss: 5.957788513550325e-07
+SAVING
+Beginning epoch 339
+loss: 5.501906911932855e-07
+val_loss: 4.893561075857473e-07
+SAVING
+Beginning epoch 340
+loss: 5.826237318842121e-07
+val_loss: 5.327299979805669e-07
+SAVING
+Beginning epoch 341
+loss: 5.405747520063047e-07
+val_loss: 5.258679547276982e-07
+SAVING
+Beginning epoch 342
+loss: 5.497292695483352e-07
+val_loss: 6.523618252794875e-07
+SAVING
+Beginning epoch 343
+loss: 5.485582872366667e-07
+val_loss: 4.667023759252451e-07
+SAVING
+Beginning epoch 344
+loss: 5.570106372914693e-07
+val_loss: 5.132895485300176e-07
+SAVING
+Beginning epoch 345
+loss: 5.690324205551999e-07
+val_loss: 5.030798686428964e-07
+SAVING
+Beginning epoch 346
+loss: 5.494032589312703e-07
+val_loss: 4.6169655631665206e-07
+SAVING
+Beginning epoch 347
+loss: 5.449093075665573e-07
+val_loss: 5.404086147589777e-07
+SAVING
+Beginning epoch 348
+loss: 5.348352179178401e-07
+val_loss: 5.13438095795273e-07
+SAVING
+Beginning epoch 349
+loss: 5.434508472996835e-07
+val_loss: 6.785598974230697e-07
+SAVING
+Beginning epoch 350
+loss: 5.448118913090754e-07
+val_loss: 4.767856142321557e-07
+SAVING
+Beginning epoch 351
+loss: 5.369557948878044e-07
+val_loss: 6.215083603948046e-07
+SAVING
+Beginning epoch 352
+loss: 5.444446372919389e-07
+val_loss: 6.742026332022748e-07
+SAVING
+Beginning epoch 353
+loss: 5.356205891110162e-07
+val_loss: 4.968401677554628e-07
+SAVING
+Beginning epoch 354
+loss: 5.33860176992008e-07
+val_loss: 5.8601172090163e-07
+SAVING
+Beginning epoch 355
+loss: 5.526309105145325e-07
+val_loss: 5.793522922123858e-07
+SAVING
+Beginning epoch 356
+loss: 5.469620687824037e-07
+val_loss: 6.427652951361766e-07
+SAVING
+Beginning epoch 357
+loss: 5.346018630279788e-07
+val_loss: 5.435978059674365e-07
+SAVING
+Beginning epoch 358
+loss: 5.200655395817614e-07
+val_loss: 4.867153703043199e-07
+SAVING
+Beginning epoch 359
+loss: 5.188349512540054e-07
+val_loss: 5.883228630275074e-07
+SAVING
+Beginning epoch 360
+loss: 5.149802115933135e-07
+val_loss: 1.0396540521379765e-06
+SAVING
+Beginning epoch 361
+loss: 5.088979300713183e-07
+val_loss: 4.742433265497491e-07
+SAVING
+Beginning epoch 362
+loss: 5.120978811637022e-07
+val_loss: 4.875361222214541e-07
+SAVING
+Beginning epoch 363
+loss: 5.026021258263268e-07
+val_loss: 4.768174669623118e-07
+SAVING
+Beginning epoch 364
+loss: 5.136646465610564e-07
+val_loss: 4.67557684637989e-07
+SAVING
+Beginning epoch 365
+loss: 5.215928664282936e-07
+val_loss: 5.088559285862264e-07
+SAVING
+Beginning epoch 366
+loss: 5.451195800691182e-07
+val_loss: 5.67381935662896e-07
+SAVING
+Beginning epoch 367
+loss: 5.255555284454986e-07
+val_loss: 5.650700725863329e-07
+SAVING
+Beginning epoch 368
+loss: 5.193674325457902e-07
+val_loss: 8.264695780704181e-07
+SAVING
+Beginning epoch 369
+loss: 5.116839957822347e-07
+val_loss: 4.888941575332019e-07
+SAVING
+Beginning epoch 370
+loss: 4.996012890996239e-07
+val_loss: 5.213801644068029e-07
+SAVING
+Beginning epoch 371
+loss: 5.121828160840484e-07
+val_loss: 4.6712873098917506e-07
+SAVING
+Beginning epoch 372
+loss: 5.228807481499594e-07
+val_loss: 9.379942182348855e-07
+SAVING
+Beginning epoch 373
+loss: 5.32655739217506e-07
+val_loss: 6.253335409927414e-07
+SAVING
+Beginning epoch 374
+loss: 5.189051025727009e-07
+val_loss: 4.751652459419065e-07
+SAVING
+Beginning epoch 375
+loss: 5.210194567083664e-07
+val_loss: 4.925787003073733e-07
+SAVING
+Beginning epoch 376
+loss: 5.193688801087e-07
+val_loss: 6.111117038888321e-07
+SAVING
+Beginning epoch 377
+loss: 5.220334748271477e-07
+val_loss: 4.3825153544359227e-07
+SAVING
+Beginning epoch 378
+loss: 5.281290009364383e-07
+val_loss: 5.250876699206651e-07
+SAVING
+Beginning epoch 379
+loss: 5.057618312125511e-07
+val_loss: 5.832105941094533e-07
+SAVING
+Beginning epoch 380
+loss: 5.169609119333748e-07
+val_loss: 5.831531514328597e-07
+SAVING
+Beginning epoch 381
+loss: 4.956957464110335e-07
+val_loss: 5.814363468814431e-07
+SAVING
+Beginning epoch 382
+loss: 5.043408039631148e-07
+val_loss: 4.6449720314221464e-07
+SAVING
+Beginning epoch 383
+loss: 5.19041272184495e-07
+val_loss: 8.678075065309828e-07
+SAVING
+Beginning epoch 384
+loss: 5.244522344144602e-07
+val_loss: 6.302535578623987e-07
+SAVING
+Beginning epoch 385
+loss: 5.251733328458414e-07
+val_loss: 4.4489730429900896e-07
+SAVING
+Beginning epoch 386
+loss: 5.233886046111008e-07
+val_loss: 5.194653610174037e-07
+SAVING
+Beginning epoch 387
+loss: 5.1552005127981e-07
+val_loss: 5.073104272818276e-07
+SAVING
+Beginning epoch 388
+loss: 5.101966618866103e-07
+val_loss: 4.866772051525298e-07
+SAVING
+Beginning epoch 389
+loss: 5.067099753031543e-07
+val_loss: 4.900513370247109e-07
+SAVING
+Beginning epoch 390
+loss: 4.958262469876583e-07
+val_loss: 4.304462593186337e-07
+SAVING
+Beginning epoch 391
+loss: 5.096606881535529e-07
+val_loss: 4.383372357042518e-07
+SAVING
+Beginning epoch 392
+loss: 4.965430437014062e-07
+val_loss: 4.65379206044853e-07
+SAVING
+Beginning epoch 393
+loss: 4.984119550952084e-07
+val_loss: 4.65425139930656e-07
+SAVING
+Beginning epoch 394
+loss: 4.812865789708283e-07
+val_loss: 6.731740155104694e-07
+SAVING
+Beginning epoch 395
+loss: 5.013251771302902e-07
+val_loss: 5.560895601774973e-07
+SAVING
+Beginning epoch 396
+loss: 4.994875536904735e-07
+val_loss: 5.108286346035449e-07
+SAVING
+Beginning epoch 397
+loss: 4.942430015590341e-07
+val_loss: 6.047053212844564e-07
+SAVING
+Beginning epoch 398
+loss: 4.817048450780392e-07
+val_loss: 5.138278889320081e-07
+SAVING
+Beginning epoch 399
+loss: 4.824421480551411e-07
+val_loss: 4.894807417854217e-07
+SAVING
+Beginning epoch 400
+loss: 4.862894731493598e-07
+val_loss: 6.106301192387395e-07
+SAVING
+Beginning epoch 401
+loss: 5.02943658019677e-07
+val_loss: 4.44682439778467e-07
+SAVING
+Beginning epoch 402
+loss: 4.962306204643186e-07
+val_loss: 5.629497926472307e-07
+SAVING
+Beginning epoch 403
+loss: 4.801439969109065e-07
+val_loss: 4.4463937148149443e-07
+SAVING
+Beginning epoch 404
+loss: 5.011437027127075e-07
+val_loss: 6.450513348880404e-07
+SAVING
+Beginning epoch 405
+loss: 4.944924467421723e-07
+val_loss: 5.113906180648767e-07
+SAVING
+Beginning epoch 406
+loss: 4.969178038425127e-07
+val_loss: 4.370874076447391e-07
+SAVING
+Beginning epoch 407
+loss: 4.80017330154221e-07
+val_loss: 4.764783717503082e-07
+SAVING
+Beginning epoch 408
+loss: 4.866110851180362e-07
+val_loss: 4.537309411194707e-07
+SAVING
+Beginning epoch 409
+loss: 4.7313684722896583e-07
+val_loss: 4.899608589145738e-07
+SAVING
+Beginning epoch 410
+loss: 4.943316603242722e-07
+val_loss: 5.156433600481711e-07
+SAVING
+Beginning epoch 411
+loss: 5.038749007731234e-07
+val_loss: 4.5275123298638453e-07
+SAVING
+Beginning epoch 412
+loss: 4.872734625655652e-07
+val_loss: 5.801253430939103e-07
+SAVING
+Beginning epoch 413
+loss: 4.956110501411356e-07
+val_loss: 4.937683574063402e-07
+SAVING
+Beginning epoch 414
+loss: 4.995485964876033e-07
+val_loss: 6.104601778319398e-07
+SAVING
+Beginning epoch 415
+loss: 5.151494231037886e-07
+val_loss: 6.544410618683376e-07
+SAVING
+Beginning epoch 416
+loss: 4.884695171376983e-07
+val_loss: 5.774879369569199e-07
+SAVING
+Beginning epoch 417
+loss: 5.020560984084639e-07
+val_loss: 4.5895985193241563e-07
+SAVING
+Beginning epoch 418
+loss: 4.938168953020665e-07
+val_loss: 4.83927362332727e-07
+SAVING
+Beginning epoch 419
+loss: 4.886069134078472e-07
+val_loss: 4.5354244934329267e-07
+SAVING
+Beginning epoch 420
+loss: 4.802495143807373e-07
+val_loss: 4.996292709636332e-07
+SAVING
+Beginning epoch 421
+loss: 4.832234103670333e-07
+val_loss: 4.500567834778029e-07
+SAVING
+Beginning epoch 422
+loss: 4.865006798918919e-07
+val_loss: 4.2960566164266044e-07
+SAVING
+Beginning epoch 423
+loss: 4.837339148194538e-07
+val_loss: 4.866223988897154e-07
+SAVING
+Beginning epoch 424
+loss: 4.937101024610506e-07
+val_loss: 4.768854354788858e-07
+SAVING
+Beginning epoch 425
+loss: 4.916549564021902e-07
+val_loss: 5.838366919434379e-07
+Epoch 00426: reducing learning rate of group 0 to 4.0000e-06.
+SAVING
+Beginning epoch 426
+loss: 2.663889253971494e-07
+val_loss: 2.689476569087956e-07
+SAVING
+Beginning epoch 427
+loss: 2.6792644572158415e-07
+val_loss: 2.7154330034607126e-07
+SAVING
+Beginning epoch 428
+loss: 2.7245978976999474e-07
+val_loss: 2.77375257885812e-07
+SAVING
+Beginning epoch 429
+loss: 2.7595651241608947e-07
+val_loss: 2.7893118135099787e-07
+SAVING
+Beginning epoch 430
+loss: 2.7839556750776144e-07
+val_loss: 2.875218093533835e-07
+SAVING
+Beginning epoch 431
+loss: 2.792313347221798e-07
+val_loss: 2.835687785993197e-07
+SAVING
+Beginning epoch 432
+loss: 2.7925866917749815e-07
+val_loss: 2.862109626858641e-07
+SAVING
+Beginning epoch 433
+loss: 2.7920959421781344e-07
+val_loss: 2.8635854501406895e-07
+SAVING
+Beginning epoch 434
+loss: 2.7803135772436787e-07
+val_loss: 2.7922483075000446e-07
+SAVING
+Beginning epoch 435
+loss: 2.770789279828812e-07
+val_loss: 2.8360306398761963e-07
+SAVING
+Beginning epoch 436
+loss: 2.764444373227588e-07
+val_loss: 2.7920075045668955e-07
+SAVING
+Beginning epoch 437
+loss: 2.767152829749114e-07
+val_loss: 2.7577960557443513e-07
+SAVING
+Beginning epoch 438
+loss: 2.7640831074949465e-07
+val_loss: 2.825184167986535e-07
+SAVING
+Beginning epoch 439
+loss: 2.7768928212490166e-07
+val_loss: 2.824274563200676e-07
+SAVING
+Beginning epoch 440
+loss: 2.777484382719914e-07
+val_loss: 2.8150762892584657e-07
+SAVING
+Beginning epoch 441
+loss: 2.771579053735671e-07
+val_loss: 2.790122914055079e-07
+SAVING
+Beginning epoch 442
+loss: 2.7743205517316737e-07
+val_loss: 2.8161087819100916e-07
+Epoch 00443: reducing learning rate of group 0 to 4.0000e-07.
+SAVING
+Beginning epoch 443
+loss: 2.556314947803209e-07
+val_loss: 2.547213582970407e-07
+SAVING
+Beginning epoch 444
+loss: 2.5582745983323984e-07
+val_loss: 2.5883662297067364e-07
+SAVING
+Beginning epoch 445
+loss: 2.5605436311878686e-07
+val_loss: 2.583683602963415e-07
+SAVING
+Beginning epoch 446
+loss: 2.565974266543317e-07
+val_loss: 2.5928153510910344e-07
+SAVING
+Beginning epoch 447
+loss: 2.5666871082913574e-07
+val_loss: 2.5875619994093555e-07
+SAVING
+Beginning epoch 448
+loss: 2.5629887324679663e-07
+val_loss: 2.579238851917324e-07
+SAVING
+Beginning epoch 449
+loss: 2.559969412969289e-07
+val_loss: 2.5963052307751764e-07
+SAVING
+Beginning epoch 450
+loss: 2.5570180411523663e-07
+val_loss: 2.5783082510940055e-07
+SAVING
+Beginning epoch 451
+loss: 2.5581234042060806e-07
+val_loss: 2.596604197135452e-07
+SAVING
+Beginning epoch 452
+loss: 2.559224457517624e-07
+val_loss: 2.579853324271387e-07
+SAVING
+Beginning epoch 453
+loss: 2.5587917661556136e-07
+val_loss: 2.5872135772731424e-07
+SAVING
+Beginning epoch 454
+loss: 2.557606554713081e-07
+val_loss: 2.592798948562247e-07
+SAVING
+Beginning epoch 455
+loss: 2.5605292075238366e-07
+val_loss: 2.611959487007624e-07
+SAVING
+Beginning epoch 456
+loss: 2.560466431249884e-07
+val_loss: 2.596289006382455e-07
+SAVING
+Beginning epoch 457
+loss: 2.561023155800258e-07
+val_loss: 2.6008953038229613e-07
+SAVING
+Beginning epoch 458
+loss: 2.5619606701008335e-07
+val_loss: 2.579101483991213e-07
+SAVING
+Beginning epoch 459
+loss: 2.5663430041100556e-07
+val_loss: 2.5609377619467766e-07
+Epoch 00460: reducing learning rate of group 0 to 4.0000e-08.
+SAVING
+Beginning epoch 460
+loss: 2.4641231979360744e-07
+val_loss: 2.4738424366913175e-07
+SAVING
+Beginning epoch 461
+loss: 2.456370032396974e-07
+val_loss: 2.4731653445061813e-07
+SAVING
+Beginning epoch 462
+loss: 2.4557393734004173e-07
+val_loss: 2.492657345133204e-07
+SAVING
+Beginning epoch 463
+loss: 2.4547909174487186e-07
+val_loss: 2.488428346886151e-07
+SAVING
+Beginning epoch 464
+loss: 2.4541346838627286e-07
+val_loss: 2.47080407489129e-07
+SAVING
+Beginning epoch 465
+loss: 2.453566313658317e-07
+val_loss: 2.4921748235674643e-07
+SAVING
+Beginning epoch 466
+loss: 2.452759553714779e-07
+val_loss: 2.485423336561069e-07
+SAVING
+Beginning epoch 467
+loss: 2.453262611962132e-07
+val_loss: 2.465134932615168e-07
+SAVING
+Beginning epoch 468
+loss: 2.452054837782956e-07
+val_loss: 2.4688790244748763e-07
+SAVING
+Beginning epoch 469
+loss: 2.451276673649494e-07
+val_loss: 2.486115951603071e-07
+SAVING
+Beginning epoch 470
+loss: 2.4519421200760357e-07
+val_loss: 2.4725247401916727e-07
+SAVING
+Beginning epoch 471
+loss: 2.451263904383474e-07
+val_loss: 2.4719115578229426e-07
+SAVING
+Beginning epoch 472
+loss: 2.4505474348021875e-07
+val_loss: 2.484845617280204e-07
+SAVING
+Beginning epoch 473
+loss: 2.4502678931497854e-07
+val_loss: 2.4625660644297044e-07
+SAVING
+Beginning epoch 474
+loss: 2.4511137875601346e-07
+val_loss: 2.481156523429772e-07
+SAVING
+Beginning epoch 475
+loss: 2.4502218789678237e-07
+val_loss: 2.468456967093657e-07
+SAVING
+Beginning epoch 476
+loss: 2.450074521242023e-07
+val_loss: 2.4669723550985023e-07
+SAVING
+Beginning epoch 477
+loss: 2.449657734194915e-07
+val_loss: 2.467381080296164e-07
+SAVING
+Beginning epoch 478
+loss: 2.4492348446108676e-07
+val_loss: 2.481710495571796e-07
+SAVING
+Beginning epoch 479

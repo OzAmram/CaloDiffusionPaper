@@ -3,13 +3,23 @@ import os
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 import argparse
 import h5py as h5
+import torch
 import torch.optim as optim
 import torch.utils.data as torchdata
+import sys
+import os
 
-import utils
 from ae_models import *
 from CaloEnco import *
 
+def trim_file_path(cwd:str, num_back:int):
+    '''
+    '''
+    split_path = cwd.split("/")
+    trimmed_split_path = split_path[:-num_back]
+    trimmed_path = "/".join(trimmed_split_path)
+
+    return trimmed_path
 
 if __name__ == '__main__':
     print("TRAIN AUTOENCODER")
@@ -29,9 +39,23 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=1234,help='Pytorch seed')
     parser.add_argument('--reset_training', action='store_true', default=False,help='Retrain')
     parser.add_argument('--binning_file', type=str, default=None)
+    parser.add_argument('--patience', type=int, default=25, help='Patience for early stopper')
+    parser.add_argument('--min_delta', type=float, default=1e-5, help='Minimum loss change range for early stopper')
+    parser.add_argument('--save_folder_append', type=str, default=None, help='Optional text to append to training folder to separate outputs of training runs with the same config file')
+    parser.add_argument('--resnet_set', type=int, nargs="+", default=[0,1,2]) # --resnet set 0 2
+    parser.add_argument('--layer_sizes', type=int, nargs="+", default=None, help="Manual layer sizes input instead of from config file")
+    parser.add_argument('--no_early_stop', action='store_true', help="Turns off early stop functionality and defailts to max epochs")
+    parser.add_argument('--max_epochs', type=int, default=None, help="Manually assign a maximum number of epochs")
     flags = parser.parse_args()
 
-    dataset_config = utils.LoadJson(flags.config)
+    cwd = __file__
+    calo_challenge_dir = trim_file_path(cwd=cwd, num_back=3)
+    sys.path.append(calo_challenge_dir)
+    print(calo_challenge_dir)
+    from scripts.utils import *
+    from CaloChallenge.code.XMLHandler import *
+
+    dataset_config = LoadJson(flags.config)
 
     print("TRAINING OPTIONS")
     print(dataset_config, flush = True)
@@ -41,7 +65,12 @@ if __name__ == '__main__':
     nholdout  = dataset_config.get('HOLDOUT', 0)
 
     batch_size = dataset_config['BATCH']
-    num_epochs = dataset_config['MAXEPOCH']
+
+    if flags.no_early_stop:
+        if flags.max_epochs is None: num_epochs = dataset_config['MAXEPOCH']
+        else: num_epochs = flags.max_epochs
+    else: num_epochs = dataset_config['MAXEPOCH']
+
     early_stop = dataset_config['EARLYSTOP']
     #training_obj = dataset_config.get('TRAINING_OBJ', 'mean_pred')
     training_obj = 'mean_pred'
@@ -56,7 +85,7 @@ if __name__ == '__main__':
 
     # LOAD IN DATA
     for i, dataset in enumerate(dataset_config['FILES']):
-        data_,e_ = utils.DataLoader(
+        data_,e_ = DataLoader(
             os.path.join(flags.data_folder,dataset),
             dataset_config['SHAPE_PAD'],
             emax = dataset_config['EMAX'],emin = dataset_config['EMIN'],
@@ -119,11 +148,17 @@ if __name__ == '__main__':
 
     del torch_data_tensor, torch_E_tensor, train_dataset, val_dataset
     checkpoint_folder = '../ae_models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'],flags.model)
+    if flags.save_folder_append is not None: # optionally append another folder title
+        checkpoint_folder = f"{checkpoint_folder}{flags.save_folder_append}/"
+
     if not os.path.exists(checkpoint_folder):
         os.makedirs(checkpoint_folder)
 
     checkpoint = dict()
     checkpoint_path = os.path.join(checkpoint_folder, "checkpoint.pth")
+    print("CHECKING!!!!")
+    print(flags.load)
+    print(os.path.exists(checkpoint_path))
     if(flags.load and os.path.exists(checkpoint_path)): 
         print("Loading training checkpoint from %s" % checkpoint_path, flush = True)
         checkpoint = torch.load(checkpoint_path, map_location = device)
@@ -131,21 +166,23 @@ if __name__ == '__main__':
 
     if(flags.model == "AE"):
             shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
-            model = CondAE().to(device = device)
+            model = CaloEnco(shape, config=dataset_config, training_obj=training_obj, NN_embed=NN_embed, 
+                                nsteps=dataset_config['NSTEPS'], cold_diffu=False, avg_showers=None, 
+                                std_showers=None, E_bins=None, resnet_set=flags.resnet_set,
+                                layer_sizes=flags.layer_sizes).to(device = device)
 
             #sometimes save only weights, sometimes save other info
             if('model_state_dict' in checkpoint.keys()): model.load_state_dict(checkpoint['model_state_dict'])
             elif(len(checkpoint.keys()) > 1): model.load_state_dict(checkpoint)
-
-
-        else:
-            print("Model %s not supported!" % flags.model)
-            exit(1)
+    else:
+        print("Model %s not supported!" % flags.model)
+        exit(1)
 
     os.system('cp ae_models.py {}'.format(checkpoint_folder)) # bkp of model def
     os.system('cp {} {}'.format(flags.config,checkpoint_folder)) # bkp of config file
 
-    early_stopper = EarlyStopper(patience = dataset_config['EARLYSTOP'], mode = 'diff', min_delta = 1e-5)
+    # early_stopper = EarlyStopper(patience = dataset_config['EARLYSTOP'], mode = 'diff', min_delta = 1e-5) # DOUG SWITCHED FOR FLAGS
+    early_stopper = EarlyStopper(patience = flags.patience, mode = 'diff', min_delta = flags.min_delta)
     if('early_stop_dict' in checkpoint.keys() and not flags.reset_training): early_stopper.__dict__ = checkpoint['early_stop_dict']
     print(early_stopper.__dict__)
     
@@ -161,11 +198,13 @@ if __name__ == '__main__':
     val_losses = np.zeros(num_epochs)
     start_epoch = 0
     min_validation_loss = 99999.
-    if('train_loss_hist' in checkpoint.keys() and not flags.reset_training): 
+    if('train_loss_hist' in checkpoint.keys() and not flags.reset_training):
+        train_hist = checkpoint['train_loss_hist']
+        # print("CHECK: Epoch", train_hist['epoch'])
         training_losses = checkpoint['train_loss_hist']
         val_losses = checkpoint['val_loss_hist']
         start_epoch = checkpoint['epoch'] + 1
-
+        
     #training loop - CARINA
     for epoch in range(start_epoch, num_epochs):
         print("Beginning epoch %i" % epoch, flush=True)
@@ -189,13 +228,13 @@ if __name__ == '__main__':
                 #noise = model.gen_cold_image(E, cold_noise_scale, noise) #REMOVED DIFFU -CK
                 
 
-            batch_loss = model.compute_loss() # COMPUTE OUR OWN MSE LOSS, DELETED WHAT WAS HERE PRIOR
+            batch_loss = model.compute_loss(data, E, t=t, loss_type='mse', energy_loss_scale=energy_loss_scale) # COMPUTE OUR OWN MSE LOSS, DELETED WHAT WAS HERE PRIOR
             batch_loss.backward()
 
             optimizer.step()
             train_loss+=batch_loss.item()
 
-            del data, E, noise, batch_loss
+            del data, E, batch_loss # DOUG REMOVED NOISE FROM OUTPUTS
 
         train_loss = train_loss/len(loader_train)
         training_losses[epoch] = train_loss
@@ -209,10 +248,10 @@ if __name__ == '__main__':
 
             t = torch.randint(0, model.nsteps, (vdata.size()[0],), device=device).long()
 
-            batch_loss = model.compute_loss() # COMPUTE OUR OWN MSE LOSS, DELETED WHAT WAS HERE PRIOR
+            batch_loss = model.compute_loss(vdata, vE, t=t, loss_type='mse', energy_loss_scale=energy_loss_scale) # COMPUTE OUR OWN MSE LOSS, DELETED WHAT WAS HERE PRIOR
 
             val_loss+=batch_loss.item()
-            del vdata,vE, noise, batch_loss
+            del vdata, vE, batch_loss # DOUG REMOVED NOISE FROM OUTPUTS
 
         val_loss = val_loss/len(loader_val)
         #scheduler.step(torch.tensor([val_loss]))
@@ -225,9 +264,10 @@ if __name__ == '__main__':
             torch.save(model.state_dict(), os.path.join(checkpoint_folder, 'best_val.pth'))
             min_validation_loss = val_loss
 
-        if(early_stopper.early_stop(val_loss - train_loss)):
-            print("Early stopping!")
-            break
+        if not flags.no_early_stop: # only use early stopper if it has not been turned off by the flag
+            if(early_stopper.early_stop(val_loss - train_loss)):
+                print("Early stopping!")
+                break
 
         # save the model
         model.eval()

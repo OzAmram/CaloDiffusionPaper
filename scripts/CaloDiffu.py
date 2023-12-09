@@ -12,7 +12,8 @@ from models import *
 class CaloDiffu(nn.Module):
     """Diffusion based generative model"""
     def __init__(self, data_shape, config=None, R_Z_inputs = False, training_obj = 'noise_pred', nsteps = 400,
-                    cold_diffu = False, E_bins = None, avg_showers = None, std_showers = None, NN_embed = None):
+                    cold_diffu = False, E_bins = None, avg_showers = None, std_showers = None, NN_embed = None,
+                    ae_layer_sizes = None, latent = False):
         super(CaloDiffu, self).__init__()
         self._data_shape = data_shape
         self.nvoxels = np.prod(self._data_shape)
@@ -28,6 +29,7 @@ class CaloDiffu(nn.Module):
         self.shower_embed = self.config.get('SHOWER_EMBED', '')
         self.fully_connected = ('FCN' in self.shower_embed)
         self.NN_embed = NN_embed
+        self.latent = latent
 
         supported = ['noise_pred', 'mean_pred', 'hybrid']
         is_obj = [s in self.training_obj for s in supported]
@@ -128,6 +130,23 @@ class CaloDiffu(nn.Module):
         print("\n\n Model: \n")
         summary(self.model, summary_shape)
 
+        if self.latent:
+            if(flags.load and os.path.exists(checkpoint_path)): 
+                print("Loading training checkpoint from %s" % checkpoint_path, flush = True)
+                checkpoint = torch.load(checkpoint_path, map_location = device)
+                print(checkpoint.keys())
+
+            shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
+            self.ae_model = CaloEnco(shape, config=dataset_config, training_obj=training_obj, NN_embed=NN_embed, 
+                                nsteps=dataset_config['NSTEPS'], cold_diffu=False, avg_showers=None, 
+                                std_showers=None, E_bins=None, resnet_set=flags.resnet_set,
+                                layer_sizes=ae_layer_sizes).to(device = device)
+
+            #sometimes save only weights, sometimes save other info
+            if('model_state_dict' in checkpoint.keys()): model.load_state_dict(checkpoint['model_state_dict'])
+            elif(len(checkpoint.keys()) > 1): model.load_state_dict(checkpoint)
+
+
     #wrapper for backwards compatability
     def load_state_dict(self, d):
         if('noise_predictor' in list(d.keys())[0]):
@@ -180,6 +199,9 @@ class CaloDiffu(nn.Module):
 
 
     def compute_loss(self, data, energy, noise = None, t = None, loss_type = "l2", rnd_normal = None, energy_loss_scale = 1e-2):
+        if self.latent:
+            data = self.ae_model.encode(data, energy)
+
         if noise is None:
             noise = torch.randn_like(data)
 
@@ -195,11 +217,13 @@ class CaloDiffu(nn.Module):
             sigma2 = sigma**2
 
 
-
         t_emb = self.do_time_embed(t, self.time_embed, sigma)
 
-
+        
         pred = self.pred(x_noisy, energy, t_emb)
+        
+        if self.latent:
+            pred = self.ae_model.decode(pred, energy)
 
         weight = 1.
         x0_pred = None

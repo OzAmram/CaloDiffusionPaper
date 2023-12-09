@@ -28,6 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=1234,help='Pytorch seed')
     parser.add_argument('--reset_training', action='store_true', default=False,help='Retrain')
     parser.add_argument('--binning_file', type=str, default=None)
+    parser.add_argument('--ae_layer_sizes', type=int, nargs="+", default=None, help="Manual layer sizes input instead of from config file")
     flags = parser.parse_args()
 
     dataset_config = utils.LoadJson(flags.config)
@@ -138,7 +139,8 @@ if __name__ == '__main__':
     if(flags.model == "Diffu"):
         shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
         model = CaloDiffu(shape, config=dataset_config, training_obj = training_obj, NN_embed = NN_embed, nsteps = dataset_config['NSTEPS'],
-                cold_diffu = cold_diffu, avg_showers = avg_showers, std_showers = std_showers, E_bins = E_bins ).to(device = device)
+                cold_diffu = cold_diffu, avg_showers = avg_showers, std_showers = std_showers, E_bins = E_bins, 
+                ae_layer_sizes = flags.ae_layer_sizes).to(device = device)
 
 
         #sometimes save only weights, sometimes save other info
