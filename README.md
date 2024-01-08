@@ -4,6 +4,9 @@ Repo for diffusion based calorimeter generation.
 
 Pytorch v1.9  was used to implement all models. 
 
+Name: Grey Singh
+Email: singh8@uchicago.edu
+
 Carina's Version 
 
 # Data
