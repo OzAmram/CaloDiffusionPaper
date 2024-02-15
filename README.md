@@ -2,6 +2,8 @@
 
 Repo for diffusion based calorimeter generation.
 
+Paper: [Denoising diffusion models with geometry adaptation for high fidelity calorimeter simulation](https://arxiv.org/abs/2308.03876)
+
 Pytorch v1.9  was used to implement all models. 
 
 # Data
