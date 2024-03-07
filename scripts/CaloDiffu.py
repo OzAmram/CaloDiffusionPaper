@@ -10,10 +10,32 @@ from models import *
 
 
 class CaloDiffu(nn.Module):
-    """Diffusion based generative model"""
+    
+    """
+    Creates a diffusion model object that performs the diffusion modeling pipeline
+    
+    Parameters:
+    - data_shape (torch.tensor): shape of the inputted data to train diffusion model with
+    - config (dict): inputting parsed configuration file
+    - R_Z_inputs (boolean): whether to embed R and Z input to inputted data
+    - training_obj (str): the kind of training objective that the model will specifically do
+    - nsteps (int): number of time steps to perform the diffusion training
+    - cold_diffu (boolean): indicator for whether generating using average showers
+    - E_bins (torch.tensor): contains information about binning of sensors, should remain None for typical autoencoder training
+    - avg_showers (torch.tensor): contains average showers energy over time for cold diffusion, should be None for typical diffusion training
+    - std_showers (torch.tensors): standardized showers to be indexed in average shower lookup, should be None for typical diffusion training
+    - NN_embed (PyTorch model): NN_embed model to convert irregular dataset 1 binning to regular binning
+    - max_downsample (int): maximum amount of times the forward passes can downsample if latent diffusion is being implemented
+    - is_latent (boolean): whether the diffusion model will be a latent diffusion model
+    
+    Returns:
+    - trained diffusion training model object
+    
+    """
+    
     def __init__(self, data_shape, config=None, R_Z_inputs = False, training_obj = 'noise_pred', nsteps = 400,
                     cold_diffu = False, E_bins = None, avg_showers = None, std_showers = None, NN_embed = None,
-                    ae_layer_sizes = None, latent = False):
+                    max_downsample=0, is_latent = False):
         super(CaloDiffu, self).__init__()
         self._data_shape = data_shape
         self.nvoxels = np.prod(self._data_shape)
@@ -29,7 +51,7 @@ class CaloDiffu(nn.Module):
         self.shower_embed = self.config.get('SHOWER_EMBED', '')
         self.fully_connected = ('FCN' in self.shower_embed)
         self.NN_embed = NN_embed
-        self.latent = latent
+        self.is_latent = is_latent
 
         supported = ['noise_pred', 'mean_pred', 'hybrid']
         is_obj = [s in self.training_obj for s in supported]
@@ -47,11 +69,11 @@ class CaloDiffu(nn.Module):
         if(torch.cuda.is_available()): device = torch.device('cuda')
         else: device = torch.device('cpu')
 
-        #Minimum and maximum maximum variance of noise
+        # Minimum and maximum maximum variance of noise
         self.beta_start = 0.0001
         self.beta_end = config.get("BETA_MAX", 0.02)
 
-        #linear schedule
+        # Linear schedule
         schedd = config.get("NOISE_SCHED", "linear")
         self.discrete_time = True
 
@@ -68,11 +90,11 @@ class CaloDiffu(nn.Module):
             exit(1)
 
         if(self.discrete_time):
-            #precompute useful quantities for training
+            # Precompute useful quantities for training
             self.alphas = 1. - self.betas
             self.alphas_cumprod = torch.cumprod(self.alphas, axis = 0)
 
-            #shift all elements over by inserting unit value in first place
+            # Shift all elements over by inserting unit value in first place
             alphas_cumprod_prev = torch.nn.functional.pad(self.alphas_cumprod[:-1], (1, 0), value=1.0)
 
             self.sqrt_recip_alphas = torch.sqrt(1.0 / self.alphas)
@@ -84,6 +106,7 @@ class CaloDiffu(nn.Module):
         self.time_embed = config.get("TIME_EMBED", 'sin')
         self.E_embed = config.get("COND_EMBED", 'sin')
         cond_dim = config['COND_SIZE_UNET']
+        if self.is_latent is True: cond_dim//=2
         layer_sizes = config['LAYER_SIZE_UNET']
         block_attn = config.get("BLOCK_ATTN", False)
         mid_attn = config.get("MID_ATTN", False)
@@ -91,7 +114,7 @@ class CaloDiffu(nn.Module):
 
 
         if(self.fully_connected):
-            #fully connected network architecture
+            # Fully connected network architecture
             self.model = FCN(cond_dim = cond_dim, dim_in = config['SHAPE_ORIG'][1], num_layers = config['NUM_LAYERS_LINEAR'],
                     cond_embed = (self.E_embed == 'sin'), time_embed = (self.time_embed == 'sin') )
 
@@ -99,55 +122,66 @@ class CaloDiffu(nn.Module):
 
             summary_shape = [[1,config['SHAPE_ORIG'][1]], [1], [1]]
 
+        # elif(self._data_shape == encoded_data.shape[1:]): #####?
+            
+        #     RZ_shape = self._data_shape
+
+        #     self.R_Z_inputs = config.get('R_Z_INPUT', False)
+        #     self.phi_inputs = config.get('PHI_INPUT', False)
+
+        #     in_channels = 1
+
+        #     self.Z_image = create_R_Z_image(device, scaled = True, shape = RZ_shape)
+        #     self.phi_image = create_phi_image(device, shape = RZ_shape)
+
+        #     if(self.R_Z_inputs): in_channels = self._data_shape[0]
+
+        #     if(self.phi_inputs): in_channels += 1
+            
+        #     calo_summary_shape = list(copy.copy(RZ_shape))
+        #     calo_summary_shape.insert(0, 1)
+        #     calo_summary_shape[1] = in_channels
+
+        #     calo_summary_shape[0] = 1
+        #     summary_shape = [calo_summary_shape, [1], [1]]
+
+
+        #     self.model = CondUnet(cond_dim = cond_dim, out_dim = 1, channels = in_channels, layer_sizes = layer_sizes, block_attn = block_attn, mid_attn = mid_attn, 
+        #             cylindrical =  config.get('CYLINDRICAL', False), compress_Z = compress_Z, data_shape = calo_summary_shape,
+        #             cond_embed = (self.E_embed == 'sin'), time_embed = (self.time_embed == 'sin'), max_downsample = max_downsample)
+            
 
         else:
-            RZ_shape = config['SHAPE_PAD'][1:]
-
-            self.R_Z_inputs = config.get('R_Z_INPUT', False)
-            self.phi_inputs = config.get('PHI_INPUT', False)
+            
+            RZ_shape = self._data_shape
+            
+            self.R_Z_inputs = False #config.get('R_Z_INPUT', False)
+            self.phi_inputs = False #config.get('PHI_INPUT', False)
 
             in_channels = 1
-
+            '''
             self.R_image, self.Z_image = create_R_Z_image(device, scaled = True, shape = RZ_shape)
             self.phi_image = create_phi_image(device, shape = RZ_shape)
-
-            if(self.R_Z_inputs): in_channels = 3
-
-            if(self.phi_inputs): in_channels += 1
+            if(self.R_Z_inputs): in_channels = self._data_shape[0]
+            '''
+            in_channels = self._data_shape[0]
 
             calo_summary_shape = list(copy.copy(RZ_shape))
             calo_summary_shape.insert(0, 1)
             calo_summary_shape[1] = in_channels
 
             calo_summary_shape[0] = 1
-            summary_shape = [calo_summary_shape, [1], [1]]
+            summary_shape = calo_summary_shape
 
+            out_dim = in_channels if self.is_latent else 1
+            
+            # Initializing conditional u-net model
+            self.model = CondUnet(cond_dim = cond_dim, out_dim = out_dim, channels = in_channels, layer_sizes = layer_sizes, block_attn = block_attn, mid_attn = mid_attn, 
+                    cylindrical =  config.get('CYLINDRICAL', False), compress_Z = compress_Z, data_shape = summary_shape,
+                    cond_embed = (self.E_embed == 'sin'), time_embed = (self.time_embed == 'sin'), max_downsample = max_downsample, is_latent=self.is_latent)
+            
 
-            self.model = CondUnet(cond_dim = cond_dim, out_dim = 1, channels = in_channels, layer_sizes = layer_sizes, block_attn = block_attn, mid_attn = mid_attn, 
-                    cylindrical =  config.get('CYLINDRICAL', False), compress_Z = compress_Z, data_shape = calo_summary_shape,
-                    cond_embed = (self.E_embed == 'sin'), time_embed = (self.time_embed == 'sin') )
-
-        print("\n\n Model: \n")
-        summary(self.model, summary_shape)
-
-        if self.latent:
-            if(flags.load and os.path.exists(checkpoint_path)): 
-                print("Loading training checkpoint from %s" % checkpoint_path, flush = True)
-                checkpoint = torch.load(checkpoint_path, map_location = device)
-                print(checkpoint.keys())
-
-            shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
-            self.ae_model = CaloEnco(shape, config=dataset_config, training_obj=training_obj, NN_embed=NN_embed, 
-                                nsteps=dataset_config['NSTEPS'], cold_diffu=False, avg_showers=None, 
-                                std_showers=None, E_bins=None, resnet_set=flags.resnet_set,
-                                layer_sizes=ae_layer_sizes).to(device = device)
-
-            #sometimes save only weights, sometimes save other info
-            if('model_state_dict' in checkpoint.keys()): model.load_state_dict(checkpoint['model_state_dict'])
-            elif(len(checkpoint.keys()) > 1): model.load_state_dict(checkpoint)
-
-
-    #wrapper for backwards compatability
+    # Wrapper for backwards compatability
     def load_state_dict(self, d):
         if('noise_predictor' in list(d.keys())[0]):
             d_new = dict()
@@ -160,15 +194,23 @@ class CaloDiffu(nn.Module):
 
     def add_RZPhi(self, x):
         cats = [x]
+        print(f"\nx.shape: {x.shape}")
+        
+        
         if(self.R_Z_inputs):
-
+            
             batch_R_image = self.R_image.repeat([x.shape[0], 1,1,1,1]).to(device=x.device)
             batch_Z_image = self.Z_image.repeat([x.shape[0], 1,1,1,1]).to(device=x.device)
-
+            print(f"self.R_image: {self.R_image.shape}")
+            print(f"batch_R_image: {batch_R_image.shape}")            
+            print(f"self.Z_image: {self.Z_image.shape}")
+            print(f"batch_Z_image: {batch_Z_image.shape}")
             cats+= [batch_R_image, batch_Z_image]
+            
         if(self.phi_inputs):
             batch_phi_image = self.phi_image.repeat([x.shape[0], 1,1,1,1]).to(device=x.device)
-
+            print(f"self.phi_image: {self.phi_image.shape}")
+            print(f"batch_phi_image: {batch_phi_image.shape}")
             cats += [batch_phi_image]
 
         if(len(cats) > 1):
@@ -178,10 +220,10 @@ class CaloDiffu(nn.Module):
             
     
     def lookup_avg_std_shower(self, inputEs):
-        idxs = torch.bucketize(inputEs, self.E_bins)  - 1 #NP indexes bins starting at 1 
+        idxs = torch.bucketize(inputEs, self.E_bins)  - 1 # NP indexes bins starting at 1 
         return self.avg_showers[idxs], self.std_showers[idxs]
 
-    
+
     def noise_image(self, data = None, t = None, noise = None):
 
         if(noise is None): noise = torch.randn_like(data)
@@ -198,10 +240,7 @@ class CaloDiffu(nn.Module):
             exit(1)
 
 
-    def compute_loss(self, data, energy, noise = None, t = None, loss_type = "l2", rnd_normal = None, energy_loss_scale = 1e-2):
-        if self.latent:
-            data = self.ae_model.encode(data, energy)
-
+    def compute_loss(self, data, energy=None, noise = None, t = None, loss_type = "l2", rnd_normal = None, energy_loss_scale = 1e-2):
         if noise is None:
             noise = torch.randn_like(data)
 
@@ -216,14 +255,9 @@ class CaloDiffu(nn.Module):
             x_noisy = data + torch.reshape(sigma, (data.shape[0], 1,1,1,1)) * noise
             sigma2 = sigma**2
 
-
         t_emb = self.do_time_embed(t, self.time_embed, sigma)
 
-        
         pred = self.pred(x_noisy, energy, t_emb)
-        
-        if self.latent:
-            pred = self.ae_model.decode(pred, energy)
 
         weight = 1.
         x0_pred = None
@@ -232,10 +266,6 @@ class CaloDiffu(nn.Module):
             c_skip = torch.reshape(1. / (sigma2 + 1.), (data.shape[0], 1,1,1,1))
             c_out = torch.reshape(1./ (1. + 1./sigma2).sqrt(), (data.shape[0], 1,1,1,1))
             weight = torch.reshape(1. + (1./ sigma2), (data.shape[0], 1,1,1,1))
-
-            #target = (data - c_skip * x_noisy)/c_out
-
-
             x0_pred = pred = c_skip * x_noisy + c_out * pred
             target = data
 
@@ -251,7 +281,8 @@ class CaloDiffu(nn.Module):
             weight = 1./ sigma2
             x0_pred = pred
 
-
+        assert target.shape == pred.shape
+        
         if loss_type == 'l1':
             loss = torch.nn.functional.l1_loss(target, pred)
         elif loss_type == 'l2':
@@ -266,7 +297,7 @@ class CaloDiffu(nn.Module):
             raise NotImplementedError()
 
         if('energy' in self.training_obj):
-            #sum total energy
+            # Sum total energy
             dims = [i for i in range(1,len(data.shape))]
             tot_energy_pred = torch.sum(x0_pred, dim = dims)
             tot_energy_data = torch.sum(data, dim = dims)
@@ -280,9 +311,9 @@ class CaloDiffu(nn.Module):
     def do_time_embed(self, t = None, embed_type = "identity",  sigma = None,):
         if(self.discrete_time):
             if(sigma is None): 
-                # identify tensor device so we can match index tensor t
+                # Identify tensor device so we can match index tensor t
                 cumprod_device = self.sqrt_one_minus_alphas_cumprod.device 
-                # move index tensor t to indexed tensor device before operation
+                # Move index tensor t to indexed tensor device before operation
                 sigma = self.sqrt_one_minus_alphas_cumprod[t.to(cumprod_device)] 
             if(embed_type == "identity" or embed_type == 'sin'):
                 return t
@@ -299,13 +330,12 @@ class CaloDiffu(nn.Module):
                 return sigma
 
     def pred(self, x, E, t_emb):
-
-        if(self.NN_embed is not None): x = self.NN_embed.enc(x).to(x.device)
-        out = self.model(self.add_RZPhi(x), E, t_emb)
-        if(self.NN_embed is not None): out = self.NN_embed.dec(out).to(x.device)
+        
+        if self.is_latent is True: E = None
+        out = self.model(x, E, t_emb)        
         return out
 
-    def denoise(self, x, E,t_emb):
+    def denoise(self, x, E, t_emb):
         pred = self.pred(x, E, t_emb)
         if('mean_pred' in self.training_obj):
             return pred
@@ -317,14 +347,16 @@ class CaloDiffu(nn.Module):
 
             return c_skip * x + c_out * pred
 
-
     @torch.no_grad()
     def p_sample(self, x, E, t, cold_noise_scale = 0., noise = None, sample_algo = 'ddpm', debug = False):
-        #reverse the diffusion process (one step)
-
+        
+        # Added conditional statement to assign E to none
+        # Encoded data collapses E channel
+        if self.is_latent is True: E = None
+       
         if(noise is None): 
             noise = torch.randn(x.shape, device = x.device)
-            if(self.cold_diffu): #cold diffusion interpolates from avg showers instead of pure noise
+            if(self.cold_diffu): # Cold diffusion interpolates from avg showers instead of pure noise
                 noise = self.gen_cold_image(E, cold_noise_scale, noise)
 
         betas_t = extract(self.betas, t, x.shape)
@@ -334,7 +366,6 @@ class CaloDiffu(nn.Module):
         posterior_variance_t = extract(self.posterior_variance, t, x.shape)
 
         t_emb = self.do_time_embed(t, self.time_embed)
-
 
         pred = self.pred(x, E, t_emb)
         if('noise_pred' in self.training_obj):
@@ -352,8 +383,6 @@ class CaloDiffu(nn.Module):
             x0_pred = c_skip * x + c_out * pred
             noise_pred = (x - sqrt_alphas_cumprod_t * x0_pred)/sqrt_one_minus_alphas_cumprod_t
 
-        
-
 
         if(sample_algo == 'ddpm'):
             # Sampling algo from https://arxiv.org/abs/2006.11239
@@ -364,8 +393,6 @@ class CaloDiffu(nn.Module):
         else:
             print("Algo %s not supported!" % sample_algo)
             exit(1)
-
-
 
         if(debug): 
             if(x0_pred is None):
@@ -384,9 +411,6 @@ class CaloDiffu(nn.Module):
 
         return torch.add(avg_shower, cold_scales * (noise * std_shower))
 
-
-
-
     @torch.no_grad()
     def Sample(self, E, num_steps = 200, cold_noise_scale = 0., sample_algo = 'ddpm', debug = False, sample_offset = 0, sample_step = 1):
         """Generate samples from diffusion model.
@@ -401,26 +425,37 @@ class CaloDiffu(nn.Module):
         """
 
         print("SAMPLE ALGO : %s" % sample_algo)
+        
+        # Added conditional statement to assign E to none
+        # Encoded data collapses energy (E) channel
+        if self.is_latent is True: E = None
 
         # Full sample (all steps)
         device = next(self.parameters()).device
 
+        
+        # Added conditional statement differentiating assignment of gen_size between latent diffusion and regular diffusion 
+        # Latent diffusion: gen_size assigned to data shape(?) because encoded data collapses energy (E) channel 
+        if self.is_latent is True:
+            gen_size = self._data_shape[0]
+            # Start from pure noise (for each example in the batch)
+            gen_shape = list(copy.copy(self._data_shape))
+            gen_shape.insert(0,gen_size)
+        # Regular diffusion
+        else:
+            gen_size = E.shape[0]
+            # Start from pure noise (for each example in the batch)
+            gen_shape = list(copy.copy(self._data_shape))
+            gen_shape.insert(0,gen_size)
 
-        gen_size = E.shape[0]
-        # start from pure noise (for each example in the batch)
-        gen_shape = list(copy.copy(self._data_shape))
-        gen_shape.insert(0,gen_size)
-
-        #start from pure noise
+        # Start from pure noise
         x_start = torch.randn(gen_shape, device=device)
 
         avg_shower = std_shower = None
-        if(self.cold_diffu): #cold diffu starts using avg images
+        if(self.cold_diffu): # Cold diffu starts using avg images
             x_start = self.gen_cold_image(E, cold_noise_scale)
 
-
         start = time.time()
-
 
         x = x_start
         fixed_noise = None
@@ -436,6 +471,7 @@ class CaloDiffu(nn.Module):
 
         for time_step in time_steps:      
             times = torch.full((gen_size,), time_step, device=device, dtype=torch.long)
+            
             out = self.p_sample(x, E, times, noise = fixed_noise, cold_noise_scale = cold_noise_scale, sample_algo = sample_algo, debug = debug)
             if(debug): 
                 x, x0_pred = out

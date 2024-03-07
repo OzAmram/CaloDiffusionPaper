@@ -1,4 +1,4 @@
-#some pytorch modules & useful functions
+# Some pytorch modules & useful functions
 from einops import rearrange
 import copy
 import math
@@ -34,7 +34,7 @@ def cosine_beta_schedule(nsteps, s=0.008):
 
 
 class CylindricalConvTrans(nn.Module):
-    #assumes format of channels,zbin,phi_bin,rbin
+    # Assumes format of channels, zbin, phi_bin, rbin
     def __init__(self, dim_in, dim_out, kernel_size = (3,4,4), stride= (1,2,2), groups = 1, padding = 1, output_padding = 0):
         super().__init__()
         if(type(padding) != int):
@@ -48,9 +48,9 @@ class CylindricalConvTrans(nn.Module):
         self.convTrans = nn.ConvTranspose3d(dim_in, dim_out, kernel_size = kernel_size, stride = stride, padding = padding, output_padding = output_padding)
 
     def forward(self, x):
-        #out size is : O = (i-1)*S + K - 2P
-        #to achieve 'same' use padding P = ((S-1)*W-S+F)/2, with F = filter size, S = stride, W = input size
-        #pad last dim with nothing, 2nd to last dim is circular one
+        # Out size is : O = (i-1)*S + K - 2P
+        # To achieve 'same' use padding P = ((S-1)*W-S+F)/2, with F = filter size, S = stride, W = input size
+        # Pad last dim with nothing, 2nd to last dim is circular one
         circ_pad = self.padding_orig[1]
         x = F.pad(x, pad = (0,0, circ_pad, circ_pad, 0, 0), mode = 'circular')
         x = self.convTrans(x)
@@ -58,7 +58,7 @@ class CylindricalConvTrans(nn.Module):
 
 
 class CylindricalConv(nn.Module):
-    #assumes format of channels,zbin,phi_bin,rbin
+    # Assumes format of channels, zbin, phi_bin, rbin
     def __init__(self, dim_in, dim_out, kernel_size = 3, stride=1, groups = 1, padding = 0, bias = True):
         super().__init__()
         if(type(padding) != int):
@@ -73,8 +73,8 @@ class CylindricalConv(nn.Module):
         self.conv = nn.Conv3d(dim_in, dim_out, kernel_size=kernel_size, stride = stride, groups = groups, padding = padding, bias = bias)
 
     def forward(self, x):
-        #to achieve 'same' use padding P = ((S-1)*W-S+F)/2, with F = filter size, S = stride, W = input size
-        #pad last dim with nothing, 2nd to last dim is circular one
+        # To achieve 'same' use padding P = ((S-1)*W-S+F)/2, with F = filter size, S = stride, W = input size
+        # Pad last dim with nothing, 2nd to last dim is circular one
         circ_pad = self.padding_orig[1]
         x = F.pad(x, pad = (0,0, circ_pad, circ_pad, 0, 0), mode = 'circular')
         x = self.conv(x)
@@ -135,12 +135,13 @@ class ResnetBlock(nn.Module):
     
     def __init__(self, dim, dim_out, *, cond_emb_dim=None, groups=8, cylindrical = False):
         super().__init__()
+
         self.mlp = (
             nn.Sequential(nn.SiLU(), nn.Linear(cond_emb_dim, dim_out))
             if exists(cond_emb_dim)
             else None
         )
-
+        
         conv = CylindricalConv(dim, dim_out, kernel_size = 1) if cylindrical else nn.Conv3d(dim, dim_out, kernel_size = 1)
         self.block1 = Block(dim, dim_out, groups=groups, cylindrical = cylindrical)
         self.block2 = Block(dim_out, dim_out, groups=groups, cylindrical = cylindrical)
@@ -148,7 +149,7 @@ class ResnetBlock(nn.Module):
 
     def forward(self, x, time_emb=None):
         h = self.block1(x)
-
+        
         if exists(self.mlp) and exists(time_emb):
             time_emb = self.mlp(time_emb)
             time_emb = rearrange(time_emb, "b c -> b c 1 1 1")
@@ -267,8 +268,7 @@ class PreNorm(nn.Module):
         x = self.norm(x)
         return self.fn(x)
 
-
-#up and down sample in 2 dims but keep z dimm
+# Up and down sample in 2 dims but keep z dimm
 
 def Upsample(dim, extra_upsample = [0,0,0], cylindrical = False, compress_Z = False):
     Z_stride = 2 if compress_Z else 1
@@ -282,11 +282,9 @@ def Downsample(dim, cylindrical = False, compress_Z = False):
     Z_stride = 2 if compress_Z else 1
     if(cylindrical): return CylindricalConv(dim, dim, kernel_size = (3,4,4), stride = (Z_stride,2,2), padding = 1)
     else: return nn.Conv3d(dim, dim, kernel_size = (3,4,4), stride = (Z_stride,2,2), padding = 1)
-    #return nn.AvgPool3d(kernel_size = (1,2,2), stride = (1,2,2), padding =0)
-
 
 class FCN(nn.Module):
-    #Fully connected network
+    # Fully connected network
     def __init__(self,
             dim_in = 356,
             num_layers = 4, 
@@ -297,25 +295,20 @@ class FCN(nn.Module):
 
         super().__init__()
 
-
-
-        # time and energy embeddings
+        # Time and energy embeddings
         half_cond_dim = cond_dim // 2
         time_layers = []
         if(time_embed): time_layers = [SinusoidalPositionEmbeddings(half_cond_dim//2)]
         else: time_layers = [nn.Unflatten(-1, (-1, 1)), nn.Linear(1, half_cond_dim//2),nn.GELU() ]
         time_layers += [ nn.Linear(half_cond_dim//2, half_cond_dim), nn.GELU(), nn.Linear(half_cond_dim, half_cond_dim)]
 
-
         cond_layers = []
         if(cond_embed): cond_layers = [SinusoidalPositionEmbeddings(half_cond_dim//2)]
         else: cond_layers = [nn.Unflatten(-1, (-1, 1)), nn.Linear(1, half_cond_dim//2),nn.GELU()]
         cond_layers += [ nn.Linear(half_cond_dim//2, half_cond_dim), nn.GELU(), nn.Linear(half_cond_dim, half_cond_dim)]
 
-
         self.time_mlp = nn.Sequential(*time_layers)
         self.cond_mlp = nn.Sequential(*cond_layers)
-
 
         out_layers = [nn.Linear(dim_in + cond_dim, dim_in)]
         for i in range(num_layers-1):
@@ -323,7 +316,6 @@ class FCN(nn.Module):
             out_layers.append(nn.Linear(dim_in, dim_in))
 
         self.main_mlp = nn.Sequential(*out_layers)
-
 
 
     def forward(self, x, cond, time):
@@ -338,7 +330,34 @@ class FCN(nn.Module):
 
 
 class CondUnet(nn.Module):
-#Unet with conditional layers
+# Unet with conditional layers
+
+    """
+    Creates a conditional u-net object that performs diffusion modeling forward passes
+    
+    Parameters:
+    - cond_dim (int): dimensionality of conditional embedding vectors
+    - out_dim (int): number of output channel dimensions
+    - channels (int): number of input channels for initial cylindrical convolution
+    - layer_sizes (list): primary method to control downsampling, list of input channel dimensions which is zipped for UNet ResNet blocks
+    - block_attn (boolean):
+    - mid_attn (boolean): whether to add attention blocks in between Resnet + Downsample combos in UNet
+    - cylindrical (boolean): whether to perform cylindrical convolution
+    - compress_Z (boolean): indicates need to adjust z-dimension downsampling for consistency
+    - data_shape (torch.tensor): the shape of the original data
+    - time_embed (bool): whether to embed time for UNet
+    - cond_embed (bool): whether to embed energy 
+    - max_downsample (int): the maximum number of times the diffusion pipeline downsamples if it is latent diffusion
+    - is_latent (boolean): whether the diffusion pipeline is a latent_diffusion
+    - resnet_block_groups (int): number of groups to separate channels into for group norm operation in Block()
+    - use_convnext (boolean): whether to use ConvNextBlocks in UNet
+    - convnext_mult (int): groupnorm output dimension multiplier
+    
+    Returns:
+    - object containing functions necessary to call forward passes that train diffusion training model
+    
+    """
+
     def __init__(
         self,
         out_dim=1,
@@ -352,21 +371,20 @@ class CondUnet(nn.Module):
         compress_Z = False,
         convnext_mult=2,
         cylindrical = False,
-        data_shape = (-1,1,45, 16,9),
+        data_shape = (-1,1,45,16,9),
         time_embed = True,
         cond_embed = True,
+        max_downsample = 0,
+        is_latent = False 
     ):
         super().__init__()
 
-        # determine dimensions
+        # Determine dimensions
         self.channels = channels
         self.block_attn = block_attn
         self.mid_attn = mid_attn
+        self.is_latent = is_latent
 
-
-
-        #dims = [channels, *map(lambda m: dim * m, dim_mults)]
-        #layer_sizes.insert(0, channels)
         in_out = list(zip(layer_sizes[:-1], layer_sizes[1:])) 
         
         if(not cylindrical): self.init_conv = nn.Conv3d(channels, layer_sizes[0], kernel_size = 3, padding = 1)
@@ -377,10 +395,12 @@ class CondUnet(nn.Module):
         else:
             block_klass = partial(ResnetBlock, groups=resnet_block_groups, cylindrical = cylindrical)
 
-        # time and energy embeddings
-        half_cond_dim = cond_dim // 2
-
+        # Time and energy embeddings
+        if self.is_latent is True: half_cond_dim = cond_dim
+        else: half_cond_dim = cond_dim // 2
+        
         time_layers = []
+        
         if(time_embed): time_layers = [SinusoidalPositionEmbeddings(half_cond_dim//2)]
         else: time_layers = [nn.Unflatten(-1, (-1, 1)), nn.Linear(1, half_cond_dim//2),nn.GELU() ]
         time_layers += [ nn.Linear(half_cond_dim//2, half_cond_dim), nn.GELU(), nn.Linear(half_cond_dim, half_cond_dim)]
@@ -396,7 +416,7 @@ class CondUnet(nn.Module):
         self.cond_mlp = nn.Sequential(*cond_layers)
 
 
-        # layers
+        # Layers
         self.downs = nn.ModuleList([])
         self.ups = nn.ModuleList([])
         self.downs_attn = nn.ModuleList([])
@@ -406,9 +426,12 @@ class CondUnet(nn.Module):
         num_resolutions = len(in_out)
 
         cur_data_shape = data_shape[-3:]
-
+        
+        cutoff = 1 if max_downsample >= 2 else max_downsample - 1
+        
         for ind, (dim_in, dim_out) in enumerate(in_out):
-            is_last = (ind >= (num_resolutions - 1))
+            
+            is_last = True if ind > cutoff else False
             if(not is_last):
                 extra_upsample_dim = [(cur_data_shape[0] + 1)%2, cur_data_shape[1]%2, cur_data_shape[2]%2]
                 Z_dim = cur_data_shape[0] if not compress_Z else math.ceil(cur_data_shape[0]/2.0)
@@ -431,19 +454,17 @@ class CondUnet(nn.Module):
         if(self.mid_attn): self.mid_attn = Residual(PreNorm(mid_dim, LinearAttention(mid_dim, cylindrical = cylindrical)))
         self.mid_block2 = block_klass(mid_dim, mid_dim, cond_emb_dim=cond_dim)
 
+        ups = {}
+        if cutoff > -1: ups = {1} if cutoff == 0 else {0, 1}
         for ind, (dim_in, dim_out) in enumerate(reversed(in_out)):
-            is_last = (ind >= (num_resolutions - 1))
-
-            if(not is_last): 
-                extra_upsample = self.extra_upsamples.pop()
-
+            if ind in ups: extra_upsample = self.extra_upsamples.pop()
 
             self.ups.append(
                 nn.ModuleList(
                     [
                         block_klass(dim_out * 2, dim_in, cond_emb_dim=cond_dim),
                         block_klass(dim_in, dim_in, cond_emb_dim=cond_dim),
-                        Upsample(dim_in, extra_upsample, cylindrical, compress_Z = compress_Z) if not is_last else nn.Identity(),
+                        Upsample(dim_in, extra_upsample, cylindrical, compress_Z = compress_Z) if ind in ups else nn.Identity(),
                     ]
                 )
             )
@@ -453,18 +474,19 @@ class CondUnet(nn.Module):
         else:  final_lay = CylindricalConv(layer_sizes[0], out_dim, 1)
         self.final_conv = nn.Sequential( block_klass(layer_sizes[1], layer_sizes[0]),  final_lay )
 
-    def forward(self, x, cond, time):
+    def forward(self, x, cond=None, time=None):
 
         x = self.init_conv(x)
-
         t = self.time_mlp(time)
-        c = self.cond_mlp(cond)
-        conditions = torch.cat([t,c], axis = -1)
 
+        if cond is not None: 
+            c = self.cond_mlp(cond)
+            conditions = torch.cat([t,c], axis = -1)
+        else: conditions = t
 
         h = []
 
-        # downsample
+        # Downsample
         for i, (block1, block2, downsample) in enumerate(self.downs):
             x = block1(x, conditions)
             x = block2(x, conditions)
@@ -472,13 +494,12 @@ class CondUnet(nn.Module):
             h.append(x)
             x = downsample(x)
 
-        # bottleneck
+        # Bottleneck
         x = self.mid_block1(x, conditions)
         if(self.mid_attn): x = self.mid_attn(x)
         x = self.mid_block2(x, conditions)
 
-
-        # upsample
+        # Upsample
         for i, (block1, block2, upsample) in enumerate(self.ups):
             x = torch.cat((x, h.pop()), dim=1)
             x = block1(x, conditions)

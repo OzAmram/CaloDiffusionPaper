@@ -49,9 +49,9 @@ class CylindricalConvTrans(nn.Module):
         self.convTrans = nn.ConvTranspose3d(dim_in, dim_out, kernel_size = kernel_size, stride = stride, padding = padding, output_padding = output_padding)
 
     def forward(self, x):
-        #out size is : O = (i-1)*S + K - 2P
-        #to achieve 'same' use padding P = ((S-1)*W-S+F)/2, with F = filter size, S = stride, W = input size
-        #pad last dim with nothing, 2nd to last dim is circular one
+        # Out size is : O = (i-1)*S + K - 2P
+        # To achieve 'same' use padding P = ((S-1)*W-S+F)/2, with F = filter size, S = stride, W = input size
+        # Pad last dim with nothing, 2nd to last dim is circular one
         circ_pad = self.padding_orig[1]
         x = F.pad(x, pad = (0,0, circ_pad, circ_pad, 0, 0), mode = 'circular')
         x = self.convTrans(x)
@@ -59,7 +59,7 @@ class CylindricalConvTrans(nn.Module):
 
 
 class CylindricalConv(nn.Module):
-    #assumes format of channels,zbin,phi_bin,rbin
+    # Assumes format of channels,zbin,phi_bin,rbin
     def __init__(self, dim_in, dim_out, kernel_size = 3, stride=1, groups = 1, padding = 0, bias = True):
         super().__init__()
         if(type(padding) != int):
@@ -74,8 +74,8 @@ class CylindricalConv(nn.Module):
         self.conv = nn.Conv3d(dim_in, dim_out, kernel_size=kernel_size, stride = stride, groups = groups, padding = padding, bias = bias)
         
     def forward(self, x):
-        #to achieve 'same' use padding P = ((S-1)*W-S+F)/2, with F = filter size, S = stride, W = input size
-        #pad last dim with nothing, 2nd to last dim is circular one
+        # To achieve 'same' use padding P = ((S-1)*W-S+F)/2, with F = filter size, S = stride, W = input size
+        # Pad last dim with nothing, 2nd to last dim is circular one
         circ_pad = self.padding_orig[1]
         x = F.pad(x, pad = (0,0, circ_pad, circ_pad, 0, 0), mode = 'circular')
         x = self.conv(x)
@@ -271,7 +271,7 @@ class PreNorm(nn.Module):
         return self.fn(x)
 
 
-#up and down sample in 2 dims but keep z dimm
+# Up and down sample in 2 dims but keep z dimm
 
 def Upsample(dim, extra_upsample = [0,0,0], cylindrical = False, compress_Z = False):
     Z_stride = 2 if compress_Z else 1
@@ -285,11 +285,11 @@ def Downsample(dim, cylindrical = False, compress_Z = False):
     Z_stride = 2 if compress_Z else 1
     if(cylindrical): return CylindricalConv(dim, dim, kernel_size = (3,4,4), stride = (Z_stride,2,2), padding = 1)
     else: return nn.Conv3d(dim, dim, kernel_size = (3,4,4), stride = (Z_stride,2,2), padding = 1)
-    #return nn.AvgPool3d(kernel_size = (1,2,2), stride = (1,2,2), padding =0)
+    # Return nn.AvgPool3d(kernel_size = (1,2,2), stride = (1,2,2), padding =0)
 
 
 class FCN(nn.Module):
-    #Fully connected network
+    # Fully connected network
     def __init__(self,
             dim_in = 356,
             num_layers = 4, 
@@ -302,7 +302,7 @@ class FCN(nn.Module):
 
 
 
-        # time and energy embeddings
+        # Time and energy embeddings
         half_cond_dim = cond_dim // 2
         time_layers = []
         if(time_embed): time_layers = [SinusoidalPositionEmbeddings(half_cond_dim//2)]
@@ -338,10 +338,30 @@ class FCN(nn.Module):
         x = self.main_mlp(x)
         return x
 
-
-
 class CondAE(nn.Module):
-#Unet with conditional layers
+# Unet with conditional layers
+    """
+        Conditional autoencoder derived from the u-net structure that encodes original data into latent space 
+            to reduce dimensionality and reconstruct encoded data back into its original shape (decoding)
+        
+        Parameters:
+        - out_dim (int): number of output channel dimensions
+        - layer_sizes (list): primary method to control downsampling, list of input channel dimensions which is zipped for UNet ResNet blocks
+        - channels (int): number of input channels for initial cylindrical convolution
+        - cond_dim (int): dimensionality of conditional embedding vectors
+        - resnet_block_groups (int): number of groups to separate channels into for group norm operation in Block()
+        - use_convnext (bool): whether to use ConvNextBlocks in UNet
+        - mid_attn (bool): whether to add attention blocks in between Resnet + Downsample combos in UNet
+        - compress_Z (bool): indicates need to adjust z-dimension downsampling for consistency 
+        - convnext_mult (int): groupnorm output dimension multiplier
+        - cylindrical (bool): indicates whether convolutions are cylindrical or not
+        - data_shape (tuple): shape of input data samples
+        - time_embed (bool): whether to embed time for UNet
+        - cond_embed (bool): whether to embed energy 
+        - resnet_set (list): alternate method to control downsampling, allows removal of resnet + downsample block combinations from UNet architecture 
+
+        """
+    
     def __init__(
         self,
         out_dim=1,
@@ -362,23 +382,21 @@ class CondAE(nn.Module):
     ):
         super().__init__()
 
-        # determine dimensions
+        # Determine dimensions
         self.channels = channels
         self.block_attn = block_attn
         self.mid_attn = mid_attn
         
-        # adjust dimensionality
+        # Adjust dimensionality
         self.resnet_set = resnet_set
         if self.resnet_set != [0,1,2]:
             self.plus_one = True
         else:
             self.plus_one = False
 
-        #dims = [channels, *map(lambda m: dim * m, dim_mults)]
-        #layer_sizes.insert(0, channels)
         in_out = list(zip(layer_sizes[:-1], layer_sizes[1:])) 
         
-        # initialize convolutions as cylindrical or not
+        # Initialize convolutions as cylindrical or not
         if(not cylindrical): self.init_conv = nn.Conv3d(channels, layer_sizes[0], kernel_size = 3, padding = 1) 
         else: self.init_conv = CylindricalConv(channels, layer_sizes[0], kernel_size = 3, padding = 1)
 
@@ -387,7 +405,7 @@ class CondAE(nn.Module):
         else:
             block_klass = partial(ResnetBlock, groups=resnet_block_groups, cylindrical = cylindrical)
 
-        # time and energy embeddings
+        # Time and energy embeddings
         half_cond_dim = cond_dim // 2
 
         time_layers = []
@@ -406,7 +424,7 @@ class CondAE(nn.Module):
         self.cond_mlp = nn.Sequential(*cond_layers)
 
 
-        # layers
+        # Layers
         self.downs = nn.ModuleList([])
         self.ups = nn.ModuleList([])
         self.downs_attn = nn.ModuleList([])
@@ -420,9 +438,9 @@ class CondAE(nn.Module):
         for ind, (dim_in, dim_out) in enumerate(in_out):
             is_last = (ind >= (num_resolutions - 1))
             if(not is_last):
-                if self.plus_one: extra_upsample_dim = [(cur_data_shape[0] + 1)%2, cur_data_shape[1]%2, (cur_data_shape[2] + 1)%2] #ADDED +1 for extra upsampling to match dimensionality for pytorch model KEEGAN
+                # Added +1 for extra upsampling to match dimensionality for pytorch model
+                if self.plus_one: extra_upsample_dim = [(cur_data_shape[0] + 1)%2, cur_data_shape[1]%2, (cur_data_shape[2] + 1)%2]
                 else: extra_upsample_dim = [(cur_data_shape[0] + 1)%2, cur_data_shape[1]%2, (cur_data_shape[2])%2]
-                # extra_upsample_dim = [(cur_data_shape[0] + 1)%2, cur_data_shape[1]%2, (cur_data_shape[2])%2]
                 Z_dim = cur_data_shape[0] if not compress_Z else math.ceil(cur_data_shape[0]/2.0)
                 cur_data_shape = (Z_dim, cur_data_shape[1] // 2, cur_data_shape[2] // 2)
                 self.extra_upsamples.append(extra_upsample_dim)
@@ -453,7 +471,7 @@ class CondAE(nn.Module):
             self.ups.append(
                 nn.ModuleList(
                     [
-                        block_klass(dim_out, dim_in, cond_emb_dim=cond_dim), # DOUG REMOVED *2 FROM DIM_OUT
+                        block_klass(dim_out, dim_in, cond_emb_dim=cond_dim),
                         block_klass(dim_in, dim_in, cond_emb_dim=cond_dim), 
                         Upsample(dim_in, extra_upsample, cylindrical, compress_Z = compress_Z) if not is_last else nn.Identity(),
                     ]
@@ -465,11 +483,25 @@ class CondAE(nn.Module):
         else:  final_lay = CylindricalConv(layer_sizes[0], out_dim, 1)
         self.final_conv = nn.Sequential( block_klass(layer_sizes[1], layer_sizes[0]),  final_lay )
 
-    def forward(self, x, cond, time):      
+    def forward(self, x, cond, time):  
+        
+        """
+        Class function that performs the full forward pass the both encodes the original data, passes it through a linear attention,
+        and decodes the encoded data to reconsstruct it back to its original shape
+        
+        Parameters:
+        - x (torch.tensor): data to be encoded
+        - cond (torch.tensor): energies
+        - time (torch.tensor): time embedding
+        
+        Returns:
+        - fully trained autoencoder model
+        """
+            
         conditions = self.cond_mlp(cond)  
-        x = self.init_conv(x) # convolution
+        x = self.init_conv(x) # Convolution
 
-        # downsample
+        # Downsample
         for i, (block1, block2, downsample) in enumerate(self.downs):
             x = block1(x, conditions)            
             x = block2(x, conditions)
@@ -477,12 +509,12 @@ class CondAE(nn.Module):
                 x = self.downs_attn[i](x)
             x = downsample(x)
 
-        # bottleneck
+        # Bottleneck
         x = self.mid_block1(x, conditions)
         if(self.mid_attn): x = self.mid_attn(x)
         x = self.mid_block2(x, conditions)
 
-        # upsample
+        # Upsample
         for i, (block1, block2, upsample) in enumerate(self.ups):
             x = block1(x, conditions)
             x = block2(x, conditions)
@@ -493,6 +525,19 @@ class CondAE(nn.Module):
         return self.final_conv(x)
     
     def encode(self, x, cond):
+        
+        """
+        Class function that performs only the encoding step in the conditional u-net to transform original data into a lower
+        dimensional space to generated a latent space
+        
+        Parameters:
+        - x (torch.tensor): data to be encoded
+        - cond (torch.tensor): energies
+        
+        Returns:
+        - original data that's dimensionally reduced into encoded shape (latent space)
+        """
+        
         conditions = self.cond_mlp(cond)
 
         x = self.init_conv(x) # convolution
@@ -510,8 +555,21 @@ class CondAE(nn.Module):
         if(self.mid_attn): x = self.mid_attn(x)
         
         return x
-
-    def decode(self, x, cond): 
+    
+    def decode(self, x, cond):
+        
+        """
+        Class function that performs only the decoding step in the conditional u-net to transform encoded data into its original dimension size
+        or otherwise transforming latent space shape into original shape
+        
+        Parameters:
+        - x (torch.tensor): data to be encoded
+        - cond (torch.tensor): energies
+        
+        Returns:
+        - encoded data transformed back into its original shape
+        """
+        
         conditions = self.cond_mlp(cond)
 
         # bottleneck attention and convolution

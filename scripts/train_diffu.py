@@ -6,10 +6,13 @@ import h5py as h5
 import torch.optim as optim
 import torch.utils.data as torchdata
 
-import utils
 from CaloDiffu import *
 from models import *
 
+import utils
+import sys
+
+from autoencoder.CaloEnco import *
 
 if __name__ == '__main__':
     print("TRAIN DIFFU")
@@ -27,12 +30,29 @@ if __name__ == '__main__':
     parser.add_argument('--load', action='store_true', default=False,help='Load pretrained weights to continue the training')
     parser.add_argument('--seed', type=int, default=1234,help='Pytorch seed')
     parser.add_argument('--reset_training', action='store_true', default=False,help='Retrain')
+    parser.add_argument('--layer_sizes', type=int, nargs="+", default=None, help="Manual layer sizes input instead of from config file")
     parser.add_argument('--binning_file', type=str, default=None)
-    parser.add_argument('--ae_layer_sizes', type=int, nargs="+", default=None, help="Manual layer sizes input instead of from config file")
+    parser.add_argument('--save_folder_append', type=str, default=None, help='Optional text to append to training folder to separate outputs of training runs with the same config file')
+    parser.add_argument('--model_loc', default='test', help='Location of model')
+    
     flags = parser.parse_args()
 
     dataset_config = utils.LoadJson(flags.config)
 
+    def trim_file_path(cwd:str, num_back:int):
+        '''
+        '''
+        split_path = cwd.split("/")
+        trimmed_split_path = split_path[:-num_back]
+        trimmed_path = "/".join(trimmed_split_path)
+
+        return trimmed_path
+
+    cwd = __file__
+    calo_challenge_dir = trim_file_path(cwd=cwd, num_back=3)
+    sys.path.append(calo_challenge_dir)
+    from scripts.utils import *
+    from CaloChallenge.code.XMLHandler import *
     print("TRAINING OPTIONS")
     print(dataset_config, flush = True)
 
@@ -107,24 +127,25 @@ if __name__ == '__main__':
     else: data = np.reshape(data, (len(data), -1))
 
     num_data = data.shape[0]
-    print("Data Shape " + str(data.shape))
-    data_size = data.shape[0]
-    #print("Pre-processed shower mean %.2f std dev %.2f" % (np.mean(data), np.std(data)))
-    torch_data_tensor = torch.from_numpy(data)
-    torch_E_tensor = torch.from_numpy(energies)
+    torch_data_tensor = torch.from_numpy(data).to(device = device) # creating a new tensor and stores it on the same memory from the original instantiated variables
+    torch_E_tensor = torch.from_numpy(energies).to(device = device)
     del data
-    #train_data, val_data = utils.split_data_np(data,flags.frac)
 
     torch_dataset  = torchdata.TensorDataset(torch_E_tensor, torch_data_tensor)
     nTrain = int(round(flags.frac * num_data))
     nVal = num_data - nTrain
     train_dataset, val_dataset = torch.utils.data.random_split(torch_dataset, [nTrain, nVal])
 
-    loader_train = torchdata.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
-    loader_val = torchdata.DataLoader(val_dataset, batch_size = batch_size, shuffle = True)
+    if(flags.model == "Latent_Diffu"):
+        loader_encode = torchdata.DataLoader(torch_dataset, batch_size = batch_size, shuffle = True)
+    elif (flags.model == "Diffu"):
+        loader_train = torchdata.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+        loader_val = torchdata.DataLoader(val_dataset, batch_size = batch_size, shuffle = True)
 
     del torch_data_tensor, torch_E_tensor, train_dataset, val_dataset
     checkpoint_folder = '../models/{}_{}/'.format(dataset_config['CHECKPOINT_NAME'],flags.model)
+    if flags.save_folder_append is not None: # optionally append another folder title
+        checkpoint_folder = f"{checkpoint_folder}{flags.save_folder_append}/"
     if not os.path.exists(checkpoint_folder):
         os.makedirs(checkpoint_folder)
 
@@ -133,21 +154,62 @@ if __name__ == '__main__':
     if(flags.load and os.path.exists(checkpoint_path)): 
         print("Loading training checkpoint from %s" % checkpoint_path, flush = True)
         checkpoint = torch.load(checkpoint_path, map_location = device)
-        print(checkpoint.keys())
 
 
     if(flags.model == "Diffu"):
         shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
         model = CaloDiffu(shape, config=dataset_config, training_obj = training_obj, NN_embed = NN_embed, nsteps = dataset_config['NSTEPS'],
-                cold_diffu = cold_diffu, avg_showers = avg_showers, std_showers = std_showers, E_bins = E_bins, 
-                ae_layer_sizes = flags.ae_layer_sizes).to(device = device)
-
+                cold_diffu = cold_diffu, avg_showers = avg_showers, std_showers = std_showers, E_bins = E_bins ).to(device = device)
 
         #sometimes save only weights, sometimes save other info
         if('model_state_dict' in checkpoint.keys()): model.load_state_dict(checkpoint['model_state_dict'])
         elif(len(checkpoint.keys()) > 1): model.load_state_dict(checkpoint)
 
+    # Added a conditional statement, based off of flags.model, that runs the latent diffusion training pipeline to do the following three things:
+    # Encode data into a latent space with autoencoder
+    # Perform latent diffusion pipeline with encoded data
+    # Store trained latent diffusion model into directory
+    
+    elif(flags.model == "Latent_Diffu"):
+        shape = dataset_config['SHAPE_PAD'][1:] if (not orig_shape) else dataset_config['SHAPE_ORIG'][1:]
+        
+        checkpoint = torch.load(flags.model_loc, map_location = device)
+        
+        # Instantiating autoencoder
+        AE = CaloEnco(shape, config=dataset_config, training_obj='mean_pred', NN_embed=NN_embed, 
+                                nsteps=dataset_config['NSTEPS'], cold_diffu=False, avg_showers=None, 
+                                std_showers=None, E_bins=None, layer_sizes=flags.layer_sizes).to(device = device)
+        
+        
+        if('model_state_dict' in checkpoint.keys()): AE.load_state_dict(checkpoint['model_state_dict'])
+        elif(len(checkpoint.keys()) > 1): AE.load_state_dict(checkpoint)
+        
+        print("Encoding Data...")
+        encoded_data = []
+        for i, (E,data) in tqdm(enumerate(loader_encode, 0), unit="batch", total=len(loader_encode)):
+            encoded_data += AE.encode(data, E).tolist()
+        print("Data Successfully Encoded")
+        
+        encoded_data = torch.tensor(encoded_data).to(device = device)
+        # Standardizing encoded data to have mean = 0 and std = 1
+        encoded_data = (encoded_data - torch.mean(encoded_data)) / torch.std(encoded_data)
+                
+        max_downsample = np.array(encoded_data.shape)[-3:].min()//2
 
+        nTrain = int(round(flags.frac * num_data))
+        nVal = num_data - nTrain
+        train_dataset, val_dataset = torch.utils.data.random_split(encoded_data, [nTrain, nVal])
+        
+        loader_train = torchdata.DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+        loader_val = torchdata.DataLoader(val_dataset, batch_size = batch_size, shuffle = True)
+        
+        shape = encoded_data.shape[1:]
+        
+        # Instantiating difussion model
+        model = CaloDiffu(shape, config=dataset_config, training_obj = training_obj, NN_embed = None, nsteps = dataset_config['NSTEPS'],
+                cold_diffu = cold_diffu, avg_showers = avg_showers, std_showers = std_showers, E_bins = E_bins,
+                max_downsample=max_downsample, is_latent = True).to(device = device)
+        
     else:
         print("Model %s not supported!" % flags.model)
         exit(1)
@@ -178,7 +240,7 @@ if __name__ == '__main__':
         val_losses = checkpoint['val_loss_hist']
         start_epoch = checkpoint['epoch'] + 1
 
-    #training loop
+    # Training loop performing diffusion modeling with encoded data (latent diffusion)
     for epoch in range(start_epoch, num_epochs):
         print("Beginning epoch %i" % epoch, flush=True)
         for i, param in enumerate(model.parameters()):
@@ -186,20 +248,25 @@ if __name__ == '__main__':
         train_loss = 0
 
         model.train()
-        for i, (E,data) in tqdm(enumerate(loader_train, 0), unit="batch", total=len(loader_train)):
+        
+        for i, data in tqdm(enumerate(loader_train, 0), unit="batch", total=len(loader_train)):
             model.zero_grad()
             optimizer.zero_grad()
 
-            data = data.to(device = device)
-            E = E.to(device = device)
+            if isinstance(data, tuple):
+                data = data[1].to(device = device)
+                E = data[0].to(device = device)
+            else:
+                data = data.to(device = device)
+                E = None
 
             t = torch.randint(0, model.nsteps, (data.size()[0],), device=device).long()
+            
             noise = torch.randn_like(data)
-            #print('data', torch.mean(data), torch.std(data))
+
             if(cold_diffu): #cold diffusion interpolates from avg showers instead of pure noise
                 noise = model.gen_cold_image(E, cold_noise_scale, noise)
-                
-
+            
             batch_loss = model.compute_loss(data, E, noise = noise, t = t, loss_type = loss_type, energy_loss_scale = energy_loss_scale)
             batch_loss.backward()
 
@@ -214,9 +281,14 @@ if __name__ == '__main__':
 
         val_loss = 0
         model.eval()
-        for i, (vE, vdata) in tqdm(enumerate(loader_val, 0), unit="batch", total=len(loader_val)):
-            vdata = vdata.to(device=device)
-            vE = vE.to(device = device)
+        for i, vdata in tqdm(enumerate(loader_val, 0), unit="batch", total=len(loader_val)):
+            
+            if isinstance(vdata, tuple):
+                vdata = vdata[1].to(device = device)
+                vE = vdata[0].to(device = device)
+            else:
+                vdata = vdata.to(device = device)
+                vE = None
 
             t = torch.randint(0, model.nsteps, (vdata.size()[0],), device=device).long()
             noise = torch.randn_like(vdata)
@@ -228,7 +300,6 @@ if __name__ == '__main__':
             del vdata,vE, noise, batch_loss
 
         val_loss = val_loss/len(loader_val)
-        #scheduler.step(torch.tensor([val_loss]))
         val_losses[epoch] = val_loss
         print("val_loss: "+ str(val_loss), flush = True)
 
@@ -242,12 +313,10 @@ if __name__ == '__main__':
             print("Early stopping!")
             break
 
-        # save the model
         model.eval()
         print("SAVING")
-        #torch.save(model.state_dict(), checkpoint_path)
-        
-        #save full training state so can be resumed
+
+        # Save full training state so can be resumed
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),

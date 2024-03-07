@@ -30,8 +30,7 @@ def trim_file_path(cwd:str, num_back:int):
 
 # 
 cwd = __file__
-calo_challenge_dir = trim_file_path(cwd=cwd, num_back=3)
-print(calo_challenge_dir)
+calo_challenge_dir = trim_file_path(cwd=cwd, num_back=2)
 sys.path.append(calo_challenge_dir)
 from CaloChallenge.code.XMLHandler import *
 from scripts.consts import *
