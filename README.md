@@ -4,6 +4,11 @@ Repo for diffusion based calorimeter generation. Now includes pipelines to train
   
 Pytorch v1.9 was used to implement all models.
 
+# Contributors 
+
+Victor Brown
+
+victorfbrown@uchicago.edu
 
 # Data
 
